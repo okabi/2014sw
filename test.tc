@@ -1,0 +1,16 @@
+int fact(int x)
+{
+    int z;
+    z = 1;
+    while(x >= 1)
+    {
+ 	z = z / x;
+        x = x - 1;
+    }
+    if(((x || z) == (x && z)) != z){
+        z = 1;
+    }else {
+        z = 2;
+    }
+    return z;
+}

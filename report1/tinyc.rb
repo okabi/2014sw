@@ -9,7 +9,7 @@ require 'racc/parser.rb'
 # $Id: calc.y,v 1.4 2005/11/20 13:29:32 aamine Exp $
 class Tinyc < Racc::Parser
 
-module_eval(<<'...end compiler.y/module_eval...', 'compiler.y', 227)
+module_eval(<<'...end compiler.y/module_eval...', 'compiler.y', 122)
   
   def parse(str)
     @q = []
@@ -49,7 +49,6 @@ module_eval(<<'...end compiler.y/module_eval...', 'compiler.y', 227)
       str = $'
     end
     @q.push [false, '$end']
-    p @q
     do_parse
   end
 
@@ -167,66 +166,66 @@ racc_goto_default = [
 racc_reduce_table = [
   0, 0, :racc_error,
   1, 30, :_reduce_none,
-  2, 30, :_reduce_2,
+  2, 30, :_reduce_none,
   1, 31, :_reduce_none,
   1, 31, :_reduce_none,
-  3, 32, :_reduce_5,
+  3, 32, :_reduce_none,
   1, 34, :_reduce_none,
-  3, 34, :_reduce_7,
+  3, 34, :_reduce_none,
   1, 35, :_reduce_none,
-  6, 33, :_reduce_9,
+  6, 33, :_reduce_none,
   1, 38, :_reduce_none,
-  3, 38, :_reduce_11,
+  3, 38, :_reduce_none,
   1, 36, :_reduce_none,
   0, 36, :_reduce_none,
-  2, 39, :_reduce_14,
-  1, 40, :_reduce_15,
-  2, 40, :_reduce_16,
+  2, 39, :_reduce_none,
   1, 40, :_reduce_none,
-  5, 40, :_reduce_18,
-  7, 40, :_reduce_19,
-  5, 40, :_reduce_20,
-  3, 40, :_reduce_21,
-  4, 37, :_reduce_22,
+  2, 40, :_reduce_none,
+  1, 40, :_reduce_none,
+  5, 40, :_reduce_none,
+  7, 40, :_reduce_none,
+  5, 40, :_reduce_none,
+  3, 40, :_reduce_none,
+  4, 37, :_reduce_none,
   1, 44, :_reduce_none,
-  2, 44, :_reduce_24,
+  2, 44, :_reduce_none,
   1, 42, :_reduce_none,
   0, 42, :_reduce_none,
   1, 45, :_reduce_none,
-  2, 45, :_reduce_28,
+  2, 45, :_reduce_none,
   1, 43, :_reduce_none,
   0, 43, :_reduce_none,
   1, 41, :_reduce_none,
-  3, 41, :_reduce_32,
+  3, 41, :_reduce_none,
   1, 46, :_reduce_none,
-  3, 46, :_reduce_34,
+  3, 46, :_reduce_none,
   1, 47, :_reduce_none,
-  3, 47, :_reduce_36,
+  3, 47, :_reduce_none,
   1, 48, :_reduce_none,
-  3, 48, :_reduce_38,
+  3, 48, :_reduce_none,
   1, 49, :_reduce_none,
-  3, 49, :_reduce_40,
-  3, 49, :_reduce_41,
+  3, 49, :_reduce_none,
+  3, 49, :_reduce_none,
   1, 50, :_reduce_none,
-  3, 50, :_reduce_43,
-  3, 50, :_reduce_44,
-  3, 50, :_reduce_45,
-  3, 50, :_reduce_46,
+  3, 50, :_reduce_none,
+  3, 50, :_reduce_none,
+  3, 50, :_reduce_none,
+  3, 50, :_reduce_none,
   1, 51, :_reduce_none,
-  3, 51, :_reduce_48,
-  3, 51, :_reduce_49,
+  3, 51, :_reduce_none,
+  3, 51, :_reduce_none,
   1, 52, :_reduce_none,
-  3, 52, :_reduce_51,
-  3, 52, :_reduce_52,
+  3, 52, :_reduce_none,
+  3, 52, :_reduce_none,
   1, 53, :_reduce_none,
-  2, 53, :_reduce_54,
+  2, 53, :_reduce_none,
   1, 54, :_reduce_none,
-  4, 54, :_reduce_56,
+  4, 54, :_reduce_none,
   1, 55, :_reduce_none,
   1, 55, :_reduce_none,
-  3, 55, :_reduce_59,
+  3, 55, :_reduce_none,
   1, 57, :_reduce_none,
-  3, 57, :_reduce_61,
+  3, 57, :_reduce_none,
   1, 56, :_reduce_none,
   0, 56, :_reduce_none ]
 
@@ -353,141 +352,51 @@ Racc_debug_parser = false
 
 # reduce 1 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 29)
-  def _reduce_2(val, _values, result)
-    	  result = '(' + val[0] + ")\n(" + val[1] + ')' 
-        
-    result
-  end
-.,.,
+# reduce 2 omitted
 
 # reduce 3 omitted
 
 # reduce 4 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 37)
-  def _reduce_5(val, _values, result)
-    	  result = '(' + val[0] + ' ' + val[1] + ')'
-        
-    result
-  end
-.,.,
+# reduce 5 omitted
 
 # reduce 6 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 43)
-  def _reduce_7(val, _values, result)
-    	  result = '(' + val[0] + ' ' + val[1] + ')'
-        
-    result
-  end
-.,.,
+# reduce 7 omitted
 
 # reduce 8 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 50)
-  def _reduce_9(val, _values, result)
-    	  result = '((' + val[0] + ' ' + val[1] + ') (' + val[3] + ')' + "\n(\n" + val[5] + "\n))"
-        
-    result
-  end
-.,.,
+# reduce 9 omitted
 
 # reduce 10 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 56)
-  def _reduce_11(val, _values, result)
-    	  result = val[0] + val[2]
-        
-    result
-  end
-.,.,
+# reduce 11 omitted
 
 # reduce 12 omitted
 
 # reduce 13 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 64)
-  def _reduce_14(val, _values, result)
-    	  result = '(' + val[0] + ' ' + val[1] + ')'
-        
-    result
-  end
-.,.,
+# reduce 14 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 69)
-  def _reduce_15(val, _values, result)
-    	  result = ''
-        
-    result
-  end
-.,.,
+# reduce 15 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 73)
-  def _reduce_16(val, _values, result)
-    	  result = val[0]
-        
-    result
-  end
-.,.,
+# reduce 16 omitted
 
 # reduce 17 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 78)
-  def _reduce_18(val, _values, result)
-    	  result = '(IF ' + val[2] + val[4] + ')'
-        
-    result
-  end
-.,.,
+# reduce 18 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 82)
-  def _reduce_19(val, _values, result)
-    	  result = '(IF ' + val[2] + val[4] + val[6] + ')'
-        
-    result
-  end
-.,.,
+# reduce 19 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 86)
-  def _reduce_20(val, _values, result)
-    	  result = '(WHILE ' + val[2] + val[4] + ')'
-        
-    result
-  end
-.,.,
+# reduce 20 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 90)
-  def _reduce_21(val, _values, result)
-    	  result = '(RETURN ' + val[1] + ')'
-        
-    result
-  end
-.,.,
+# reduce 21 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 95)
-  def _reduce_22(val, _values, result)
-    	  result = ''
-          if val[1] != nil
-	    result += val[1]
-	  end
-	  if val[2] != nil
-	    result += val[2]
-	  end
-        
-    result
-  end
-.,.,
+# reduce 22 omitted
 
 # reduce 23 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 107)
-  def _reduce_24(val, _values, result)
-    	  result = val[0] + val[1]
-        
-    result
-  end
-.,.,
+# reduce 24 omitted
 
 # reduce 25 omitted
 
@@ -495,13 +404,7 @@ module_eval(<<'.,.,', 'compiler.y', 107)
 
 # reduce 27 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 116)
-  def _reduce_28(val, _values, result)
-    	  result = val[0] + val[1]
-        
-    result
-  end
-.,.,
+# reduce 28 omitted
 
 # reduce 29 omitted
 
@@ -509,173 +412,65 @@ module_eval(<<'.,.,', 'compiler.y', 116)
 
 # reduce 31 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 125)
-  def _reduce_32(val, _values, result)
-    	  result = '(' + val[0] + ' ' + val[2] + ')'
-        
-    result
-  end
-.,.,
+# reduce 32 omitted
 
 # reduce 33 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 131)
-  def _reduce_34(val, _values, result)
-    	  result = '(= ' + val[0] + val[2] + ')'
-        
-    result
-  end
-.,.,
+# reduce 34 omitted
 
 # reduce 35 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 137)
-  def _reduce_36(val, _values, result)
-    	  result = '(|| ' + val[0] + val[2] + ')'
-        
-    result
-  end
-.,.,
+# reduce 36 omitted
 
 # reduce 37 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 143)
-  def _reduce_38(val, _values, result)
-    	  result = '(&& ' + val[0] + val[2] + ')'
-        
-    result
-  end
-.,.,
+# reduce 38 omitted
 
 # reduce 39 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 149)
-  def _reduce_40(val, _values, result)
-    	  result = '(== ' + val[0] + val[2] + ')'
-        
-    result
-  end
-.,.,
+# reduce 40 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 153)
-  def _reduce_41(val, _values, result)
-    	  result = '(!= ' + val[0] + val[2] + ')'
-        
-    result
-  end
-.,.,
+# reduce 41 omitted
 
 # reduce 42 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 159)
-  def _reduce_43(val, _values, result)
-    	  result = '(< ' + val[0] + val[2] + ')'
-        
-    result
-  end
-.,.,
+# reduce 43 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 163)
-  def _reduce_44(val, _values, result)
-    	  result = '(> ' + val[0] + val[2] + ')'
-        
-    result
-  end
-.,.,
+# reduce 44 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 167)
-  def _reduce_45(val, _values, result)
-    	  result = '(<= ' + val[0] + val[2] + ')'
-        
-    result
-  end
-.,.,
+# reduce 45 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 171)
-  def _reduce_46(val, _values, result)
-    	  result = '(>= ' + val[0] + val[2] + ')'
-        
-    result
-  end
-.,.,
+# reduce 46 omitted
 
 # reduce 47 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 177)
-  def _reduce_48(val, _values, result)
-    	  result = '(+ ' + val[0] + val[2] + ')'
-        
-    result
-  end
-.,.,
+# reduce 48 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 181)
-  def _reduce_49(val, _values, result)
-    	  result = '(- ' + val[0] + val[2] + ')'
-        
-    result
-  end
-.,.,
+# reduce 49 omitted
 
 # reduce 50 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 187)
-  def _reduce_51(val, _values, result)
-    	  result = '(* ' + val[0] + val[2] + ')'
-        
-    result
-  end
-.,.,
+# reduce 51 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 191)
-  def _reduce_52(val, _values, result)
-    	  result = '(/ ' + val[0] + val[2] + ')'
-        
-    result
-  end
-.,.,
+# reduce 52 omitted
 
 # reduce 53 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 197)
-  def _reduce_54(val, _values, result)
-    	  result = -(val[1].to_i).to_s
-        
-    result
-  end
-.,.,
+# reduce 54 omitted
 
 # reduce 55 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 203)
-  def _reduce_56(val, _values, result)
-    	  result = '(' + val[0] + ' ' + val[1] + ')'
-        
-    result
-  end
-.,.,
+# reduce 56 omitted
 
 # reduce 57 omitted
 
 # reduce 58 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 210)
-  def _reduce_59(val, _values, result)
-    	  result = '(' + val[1] + ')'
-        
-    result
-  end
-.,.,
+# reduce 59 omitted
 
 # reduce 60 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 216)
-  def _reduce_61(val, _values, result)
-    	  result = '(' + val[0] + ' '  + val[2] + ')'
-        
-    result
-  end
-.,.,
+# reduce 61 omitted
 
 # reduce 62 omitted
 
@@ -703,7 +498,7 @@ end
 if str != nil
   str.chop!
   begin
-    puts "success!!! \n result => \n#{parser.parse(str)}"
+    puts "success!!! \n result => #{parser.parse(str)}"
   rescue ParseError
     puts $!
   end

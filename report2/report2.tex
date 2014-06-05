@@ -1,0 +1,101 @@
+\documentclass[titlepage, a4paper,12pt]{jarticle}
+\usepackage{listings}
+\lstset{
+  breaklines=true,
+}
+\usepackage{comment}
+\usepackage[dvipdfmx]{graphicx}
+\title{平成26年度 3回生前期学生実験SW \\ 中間レポート2}
+\author{松田貴大 \\ \small{学籍番号:1029-24-4015}}
+\date{提出日：\today 17:00 \\ 提出期限：平成26 年6 月27 日 16:00}
+%%
+\makeatletter
+\renewcommand{\thefigure}{\thesection.\arabic{figure}}
+\renewcommand{\thetable}{\thesection.\arabic{table}}
+\@addtoreset{figure}{section}
+\makeatother
+%%
+\begin{document}
+\maketitle
+\lstset{numbers=left,basicstyle=\small}
+%%
+%%
+%% ここから先は、中間レポート1の内容！！！！
+%%
+%%
+%%
+\section{はじめに}
+使用言語はRuby(2.1.0p0)で、パーサの作成にはracc(1.4.11)\footnote{http://i.loveruby.net/ja/projects/racc/}を用いている。
+%%
+%%
+\section{課題3}
+\subsection{ソースコード}
+\label{sec:source}
+パスは、\~{}/2014sw/compiler/report1/compiler.yである。
+\lstinputlisting{compiler.y}
+\subsection{設計方針}
+実験ページの資料に書かれた仕様を持つTinyCパーサを作成する。今回の課題においては、アクション部分の実装は行わない。構文チェックのみを行い、正しい構文の場合は''success''を返し、間違った構文の場合はエラーを返す。
+\subsection{各部の説明}
+\subsubsection{prechigh～preclow}
+この部分には、終端記号となる演算子と結合のルールを記述する。leftは左結合、rightは右結合を表す。
+\subsubsection{rule～end}
+この部分には、文法規則を文脈自由文法の形式で記述する。実験ページの資料に書かれた仕様をそのまま書いていく。文法規則の後にアクションを書くことも出来るが、今回は省略する\footnote{アクションを省略した場合、その部分のアクションは対応文法規則の最初の部分に現れる終端記号となる。}。
+\paragraph{工夫点}
+資料の文法規則には、省略可能の意味でoptと振られたルールが存在するが、それをそのまま記述することは出来ない。そこで、省略しない文法規則と、それを基にした省略可能な文法規則を書くことで、対応した。たとえば、以下のようなルールが該当する。
+\begin{verbatim}
+  declaration_list
+      : declaration
+      | declaration_list declaration
+  declaration_list_opt
+      : declaration_list
+      | /* none */
+\end{verbatim}
+上記ルールでは、declaration\_listは省略不可能なルールだが、declaration\_list\_optは省略可能なルールとなり、仕様を満たす。
+\subsubsection{inner}
+この部分がパーサの本体となる。
+関数parseでは、文字列を正規表現によって切り出しラベルを振っていく。たとえば、整数文字列はCONSTANTというラベルを振り、英字から始まり英数字とアンダーライン(\_)からなる文字列にはIDENTIFIERというラベルを振る。また、1個以上のスペースとタブと改行は読み飛ばす。
+\subsubsection{footer}
+この部分にはRubyプログラムの本体を書く。
+今回は、標準入力から入力の終わりまで文字列を読み、パーサによって構文解析を行い、正しい構文であれば''success!!!''の文字列とともにアクション部分で記述した結果を結合したもの\footnote{今回の場合は文字列の最初のルールで現れる最初の終端記号}が出力され、間違った構文であればエラーを返す。
+%%
+%%
+\section{課題4}
+\ref{sec:source}節で述べたソースコードから生成されたパーサを使い、いくつかのTinyCプログラムの構文を解析した結果を示す。
+\subsection{例1}
+\lstinputlisting{test.tc}
+\paragraph{結果}
+\begin{verbatim}
+success!!! 
+ result => int
+\end{verbatim}
+\subsection{例2}
+\lstinputlisting{test2.tc}
+\paragraph{結果}
+\begin{verbatim}
+success!!! 
+ result => int
+\end{verbatim}
+\subsection{例3}
+\lstinputlisting{test3.tc}
+\paragraph{結果}
+\begin{verbatim}
+parse error on value "a" (IDENTIFIER)
+\end{verbatim}
+\subsection{例4}
+\lstinputlisting{test4.tc}
+\paragraph{結果}
+\begin{verbatim}
+success!!! 
+ result => int
+\end{verbatim}
+\subsection{例5}
+\lstinputlisting{test5.tc}
+\paragraph{結果}
+\begin{verbatim}
+parse error on value 1 (CONSTANT)
+\end{verbatim}
+%%
+%%
+\section{感想}
+raccを使えば文脈自由文法形式の記述で簡単にパーサが生成できて便利だと思った。TinyCでなくても、構文解析器を作ることが出来るようになったと思う。
+\end{document}

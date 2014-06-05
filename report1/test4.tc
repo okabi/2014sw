@@ -1,0 +1,6 @@
+int a_52dax_255(int a, int b, int c){
+    int hsdr_3151s_;
+    hsdr_3151s_ = -c + ((1 + a) * 5 / (2 * b));
+
+    return hsdr_3151s_;
+}

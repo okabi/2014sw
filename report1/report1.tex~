@@ -1,0 +1,39 @@
+\documentclass[titlepage, a4paper,12pt]{jarticle}
+\usepackage{listings}
+\lstset{
+  breaklines=true,
+}
+\usepackage{comment}
+\usepackage[dvipdfmx]{graphicx}
+\title{平成26年度 3回生前期学生実験SW \\ 中間レポート1}
+\author{松田貴大}
+\date{提出日：\today 17:00 \\ 提出期限：平成26 年6 月13 日 17:00}
+%%
+\makeatletter
+\renewcommand{\thefigure}{\thesection.\arabic{figure}}
+\renewcommand{\thetable}{\thesection.\arabic{table}}
+\@addtoreset{figure}{section}
+\makeatother
+%%
+\begin{document}
+\maketitle
+\lstset{numbers=left,basicstyle=\small}
+\section{はじめに}
+使用言語はRuby(2.1.0p0)で、パーサの作成にはracc(1.4.11)\footnote{http://i.loveruby.net/ja/projects/racc/}を用いている。
+%%
+%%
+\section{課題3}
+\subsection{ソースコード}
+ディレクトリのパスは、\~{}/2014sw/compiler/report1/compiler.yである。
+\lstinputlisting{compiler.y}
+\subsection{設計方針}
+
+\subsection{各部の説明}
+%%
+%%
+\section{課題4}
+%%
+%%
+\section{感想}
+
+\end{document}

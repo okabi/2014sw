@@ -1,0 +1,11 @@
+int hoge()
+{
+  return 1;
+}
+
+int fuga()
+{
+  if(x == 0)
+  {
+  } 
+}

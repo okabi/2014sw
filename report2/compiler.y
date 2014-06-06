@@ -35,13 +35,19 @@ rule
   declaration
       : DATATYPE declarator_list ';'
         {
-	  result = [val[0], val[1]]
+	  result = []
+	  for i in val[1]
+	    result += [ [val[0], i ] ]
+	  end
         }  
   declarator_list
       : declarator
+        {
+	  result = [val[0]]
+        }
       | declarator_list ',' declarator
         {
-	  result = [val[0], val[1]]
+	  result += [val[2]]
         }  
   declarator
       : IDENTIFIER
@@ -52,6 +58,9 @@ rule
         }  
   parameter_type_list
       : parameter_declaration
+        {
+	  result = [val[0]]
+	}
       | parameter_type_list ',' parameter_declaration
         {
           result = [val[0]] + [val[2]]
@@ -76,36 +85,36 @@ rule
       | compound_statement
       | IF '(' expression ')' statement
         {
-	  result = ['IF', val[2], val[4]]
+	  result = [['IF'] + val[2] + [val[4]]]
         }       
       | IF '(' expression ')' statement ELSE statement
         {
-	  result = ['IF', val[2], val[4], val[6]]
+	  result = [['IF'] + val[2] + [val[4], val[6]]]
         }       
       | WHILE '(' expression ')' statement
         {
-	  result = ['WHILE', val[2], val[4]]
+	  result = [['WHILE'] + val[2] + [val[4]]]
         }       
       | RETURN expression ';'
         {
-	  result = ['RETURN', val[1]]
+	  result = [['RETURN'] + val[1]]
         }       
   compound_statement
       : '{' declaration_list_opt statement_list_opt '}'
         {
 	  result = []
           if val[1] != nil
-	    result += [val[1]]
+	    result += val[1]
 	  end
 	  if val[2] != nil
-	    result += [val[2]]
+	    result += val[2]
 	  end
         }       
   declaration_list
       : declaration
       | declaration_list declaration
         {
-	  result = val[0] + val[1]
+	  result = [val[0], val[1]]
         }
   declaration_list_opt
       : declaration_list
@@ -121,6 +130,9 @@ rule
       | /* none */
   expression
       : assign_expr
+        {
+	  result = [val[0]]
+	}
       | expression ',' assign_expr
         {
 	  result = [val[0], val[2]]
@@ -201,7 +213,7 @@ rule
       : primary_expr
       | IDENTIFIER '(' argument_expression_list_opt ')'
         {
-	  result = ['FCALL',val[0]] + val[2]
+	  result = ['FCALL',val[0]] + [val[2]]
         }
   primary_expr
       : IDENTIFIER
@@ -212,6 +224,9 @@ rule
         }
   argument_expression_list
       : assign_expr
+        {
+	  result = [val[0]]
+        }  
       | argument_expression_list ',' assign_expr
         {
 	  result = [val[0], val[2]]

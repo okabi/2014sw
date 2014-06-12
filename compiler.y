@@ -62,12 +62,13 @@ rule
 	          warning(1, i, check2['level'])
 		end
 		@stack.push(Object.new(i, @level, 'VAR', 0))
-		puts
-		p @stack
-		puts
 	      end
 	    end
+	    @add_sp -= 4
 	    i += ':level' + @level.to_s
+            if @level > 0
+              i += "(#{@add_sp})"
+	    end
 	    result += [ [val[0], i ] ]
 	  end
         }  
@@ -86,17 +87,16 @@ rule
       : DATATYPE IDENTIFIER '('
         {
           @level += 1
+	  @add_sp = 4
 	  @stack.push(Object.new('_UNKNOWN', 0, 'FUN', 0))
-	  puts
-	  p @stack
-	  puts
 	}   
-        parameter_type_list_opt ')' compound_statement
+        parameter_type_list_opt ')' 
+	{
+	  @add_sp = 0
+	}
+        compound_statement
         {
 	  popStack(@level)
-	  puts
-	  p @stack
-	  puts
 	  @level -= 1
   	  check = findObject(val[1], 'VAR')
 	  if check['level'] >= 0
@@ -106,13 +106,7 @@ rule
 	    if check2['level'] >= 0
 	      error(1, val[1], check2['level'])
 	    else
-              puts "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	      p val[4]
-              puts "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	      changeFunctionInfo(val[1], val[4].length)
-	      puts
-	      p @stack
-	      puts
 	    end
 	  end
 	  while @error_stack.length > 0
@@ -121,14 +115,11 @@ rule
 	    if check['level'] < 0
 	      warning(2, obj.name, -1)
 	      insertStackUndefFun(obj.name, obj.offset)
-	      puts
-	      p @stack
-	      puts
 	    elsif obj.offset != check['size']
 	      error(2, obj.name, check['size'])
 	    end	    
           end
-	  result = [ [val[0], val[1]+':level0'], val[4], val[6] ]
+	  result = [ [val[0], val[1]+':level0'], val[4], val[7] ]
         }  
   parameter_type_list
       : parameter_declaration
@@ -137,7 +128,7 @@ rule
 	}
       | parameter_type_list ',' parameter_declaration
         {
-          result = [val[0]] + [val[2]]
+          result = val[0] + [val[2]]
         }  
   parameter_type_list_opt
       : parameter_type_list
@@ -160,10 +151,8 @@ rule
 	        warning(1, val[1], check2['level'])
 	      end
   	      @stack.push(Object.new(val[1], @level, 'VAR', 0))
-	      puts
-	      p @stack
-	      puts
-	      val[1] += ':level' + @level.to_s
+	      @add_sp += 4
+	      val[1] += ':level' + @level.to_s + "(#{@add_sp})"
 	    end
 	  end
 	  result = [val[0], val[1]]
@@ -202,9 +191,6 @@ rule
         declaration_list_opt statement_list_opt '}'
         {
 	  popStack(@level)
-	  puts
-	  p @stack
-	  puts
 	  @level -= 1
 	  result = []
           if val[2] != nil
@@ -245,6 +231,11 @@ rule
       : logical_OR_expr
       | IDENTIFIER '=' assign_expr
         {
+  	  check = findObject(val[0], 'VAR')
+	  if check['level'] < 0
+	    error(3, val[0], -1)
+	  end
+	  val[0] += ":level#{check['level']}"
 	  result = ['=', val[0], val[2]]
         }       
   logical_OR_expr
@@ -318,9 +309,6 @@ rule
       | IDENTIFIER '(' argument_expression_list_opt ')'
         {
   	  check = findObject(val[0], 'FUN')
-	  puts "--------------------------------"
-	  p val[2]
-	  puts "--------------------------------"
 	  if check['level'] < 0
             if val[2] != nil
 	      @error_stack.push(Object.new(val[0], 0, 'UNDEFFUN', val[2].length))
@@ -355,7 +343,7 @@ rule
         }  
       | argument_expression_list ',' assign_expr
         {
-	  result = [val[0], val[2]]
+	  result = val[0] + [val[2]]
         }
   argument_expression_list_opt
       : argument_expression_list
@@ -385,10 +373,18 @@ end
     @level = 0
     @error_stack = []
     @error_num = 0
+    @add_sp = 0
   end
 
   def popStack(level)
     while @stack[@stack.length-1].level >= level
+      if @stack[@stack.length-1].type == 'VAR'
+        if @stack[@stack.length-1].level == 1
+	  @add_sp -= 4
+        else
+	  @add_sp += 4
+        end
+      end
       @stack.pop
     end
   end
@@ -529,9 +525,8 @@ end
 if str != nil
   str.chop!
   begin
-    puts "success!!!"
+    puts "parse success!!!"
     tree = parser.parse(str)
-    # 木の内部に相対アドレスを埋め込む処理
     puts " result => \n#{tree}"
   rescue ParseError
     puts $!

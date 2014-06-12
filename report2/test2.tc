@@ -16,9 +16,9 @@ int f(int x, int y)
 	}
 	x+y;
 }
-int g(int y)
+int g()
 {
 	int z;
 	f(x, y);
-	g(z);
+	g();
 }

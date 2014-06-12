@@ -18,84 +18,165 @@
 \begin{document}
 \maketitle
 \lstset{numbers=left,basicstyle=\small}
-%%
-%%
-%% ここから先は、中間レポート1の内容！！！！
-%%
-%%
-%%
 \section{はじめに}
 使用言語はRuby(2.1.0p0)で、パーサの作成にはracc(1.4.11)\footnote{http://i.loveruby.net/ja/projects/racc/}を用いている。
 %%
 %%
-\section{課題3}
+\section{課題6}
 \subsection{ソースコード}
 \label{sec:source}
-パスは、\~{}/2014sw/compiler/report1/compiler.yである。
+パスは、\~{}/2014sw/compiler/report2/compiler.yである。
 \lstinputlisting{compiler.y}
+%%
 \subsection{設計方針}
-実験ページの資料に書かれた仕様を持つTinyCパーサを作成する。今回の課題においては、アクション部分の実装は行わない。構文チェックのみを行い、正しい構文の場合は''success''を返し、間違った構文の場合はエラーを返す。
-\subsection{各部の説明}
-\subsubsection{prechigh～preclow}
-この部分には、終端記号となる演算子と結合のルールを記述する。leftは左結合、rightは右結合を表す。
-\subsubsection{rule～end}
-この部分には、文法規則を文脈自由文法の形式で記述する。実験ページの資料に書かれた仕様をそのまま書いていく。文法規則の後にアクションを書くことも出来るが、今回は省略する\footnote{アクションを省略した場合、その部分のアクションは対応文法規則の最初の部分に現れる終端記号となる。}。
-\paragraph{工夫点}
-資料の文法規則には、省略可能の意味でoptと振られたルールが存在するが、それをそのまま記述することは出来ない。そこで、省略しない文法規則と、それを基にした省略可能な文法規則を書くことで、対応した。たとえば、以下のようなルールが該当する。
+\label{sec:arch}
+実験資料とは少し異なる仕様の構文木を生成する。たとえば、実験資料の例(課題7のもの)を見ると、以下のような構文木が生成されている\footnote{以下では、構文木をRuby形式の配列で記述する。}。
+\paragraph{TinyCプログラム}
 \begin{verbatim}
-  declaration_list
-      : declaration
-      | declaration_list declaration
-  declaration_list_opt
-      : declaration_list
-      | /* none */
+int x;
+int f(int x, int y)
+{
+  int x;
+  {
+    int x, y;
+    x+y;
+    {
+      int x, z;
+      x+y+z;
+    }
+  }
+  {
+    int w;
+    x+y+w;
+  }
+  x+y;
+}
+int g(int y)
+{
+  int z;
+  f(x, y);
+  g(z);
+}
 \end{verbatim}
-上記ルールでは、declaration\_listは省略不可能なルールだが、declaration\_list\_optは省略可能なルールとなり、仕様を満たす。
-\subsubsection{inner}
-この部分がパーサの本体となる。
-関数parseでは、文字列を正規表現によって切り出しラベルを振っていく。たとえば、整数文字列はCONSTANTというラベルを振り、英字から始まり英数字とアンダーライン(\_)からなる文字列にはIDENTIFIERというラベルを振る。また、1個以上のスペースとタブと改行は読み飛ばす。
-\subsubsection{footer}
-この部分にはRubyプログラムの本体を書く。
-今回は、標準入力から入力の終わりまで文字列を読み、パーサによって構文解析を行い、正しい構文であれば''success!!!''の文字列とともにアクション部分で記述した結果を結合したもの\footnote{今回の場合は文字列の最初のルールで現れる最初の終端記号}が出力され、間違った構文であればエラーを返す。
+\paragraph{構文木}
+\begin{verbatim}
+[int x]
+[[int f] [[int x][int y]]
+[
+  [int x]
+  [
+    [int x y]
+    [+ x y]
+    [
+      [int x z]
+      [+ [+ x y] z]
+    ]
+  ]
+  [
+    [int w]
+    [+ [+ x y] w]
+  ]
+  [+ x y]
+]]
+[[int g] [[int y]]
+[
+  [int z]
+  [FCALL f x y]
+  [FCALL g z]
+]]
+\end{verbatim}
+今回採用した仕様では、同じTinyCプログラムは以下のような構文木を生み出す\footnote{実際には改行やインデントは行われない。}。
+\paragraph{構文木}
+\begin{verbatim}
+[
+  ["int" "x"]
+  [["int" "f"][["int" "x"] ["int" "y"]]
+  [
+    ["int" "x"]
+    ["int" "x"]
+    ["int" "y"]
+    ["+" "x" "y"]
+    ["int" "x"]
+    ["int" "z"]
+    ["+" ["+" "x" "y"] "z"]
+    ["int" "w"]
+    ["+" ["+" "x" "y"] "w"]
+    ["+" "x" "y"]
+  ]]
+  [["int" "g"] [["int" "y"]]
+  [
+    ["int" "z"]
+    ["FCALL" "f" ["x" "y"]]
+    ["FCALL" "g" ["z"]]
+  ]]
+]
+\end{verbatim}
+以下では、資料の仕様から変更した点について述べる。
+\paragraph{全体で1つの配列}
+大域で複数の変数や関数が宣言されている場合、全体を1つの配列にまとめるようにした。これは、後にこのプログラム全体を処理する際に、処理を楽にするためである。
+\paragraph{複数変数宣言}
+\subparagraph{TinyCプログラム}
+\begin{verbatim}
+int x, y;
+\end{verbatim}
+以上のように、データ型宣言の後に複数変数を宣言した場合、資料では以下のように構文木を生成している。
+\subparagraph{構文木}
+\begin{verbatim}
+[int x y]
+\end{verbatim}
+この設計だと、変数宣言時に配列の長さが可変(2以上)になってしまい、処理がやや面倒になる。そのため、複数変数宣言されている場合、以下のように別々の配列を生成するようにした。
+\subparagraph{構文木}
+\begin{verbatim}
+["int" "x"]
+["int" "y"]
+\end{verbatim}
+\paragraph{不必要な括弧}
+資料では、スコープを制限するための中括弧('\{'や'\}')によって、構文木に括弧が生成される。しかし、raccでは構文木の生成と同時にスコープの深さを調べることが出来る(すなわち、構文木生成と同時に意味解析が完全に可能である)ので、これらの括弧は不必要となる。よって、不必要な括弧は省略するようにした\footnote{もちろん、ifやwhileなどでは範囲を括弧で囲む。}。
+\paragraph{関数呼び出し時の引数}
+\subparagraph{TinyCプログラム}
+\begin{verbatim}
+f(x, y);
+\end{verbatim}
+以上のように、関数呼び出しの際に引数が複数ある場合、資料では以下のように構文木を生成している。
+\subparagraph{構文木}
+\begin{verbatim}
+[FCALL f x y]
+\end{verbatim}
+この設計だと、関数呼び出し時に配列の長さが可変(2以上)になってしまい、処理がやや面倒になる。そのため、どのような場合でも引数全体を配列で包み、関数呼び出し部分の配列の長さは3になるようにした。
+\subparagraph{構文木}
+\begin{verbatim}
+["FCALL" "f" ["x" "y"]]
+\end{verbatim}
+同様に、以下のようなコードは、以下のような構文木になる。
+\subparagraph{TinyCプログラム}
+\begin{verbatim}
+g(int x);
+h();
+\end{verbatim}
+\subparagraph{構文木}
+\begin{verbatim}
+["FCALL" "g" ["x"]]
+["FCALL" "h" []]
+\end{verbatim}
 %%
+\subsection{文法規則のアクション部分について}
 %%
-\section{課題4}
-\ref{sec:source}節で述べたソースコードから生成されたパーサを使い、いくつかのTinyCプログラムの構文を解析した結果を示す。
-\subsection{例1}
+\subsection{演算子の優先順位が正しく反映される理由}
+%%
+\subsection{工夫点}
+節\ref{sec:arch}で述べたように、実験資料とは異なる構造の構文木を生成している。
+%%
+\subsection{実行例と結果}
+\ref{sec:source}節で述べたソースコードから生成されたパーサと構文木生成プログラムを使い、いくつかのTinyCプログラムの構文を解析した結果を示す。
+\subsubsection{例1}
 \lstinputlisting{test.tc}
 \paragraph{結果}
 \begin{verbatim}
 success!!! 
  result => int
 \end{verbatim}
-\subsection{例2}
-\lstinputlisting{test2.tc}
-\paragraph{結果}
-\begin{verbatim}
-success!!! 
- result => int
-\end{verbatim}
-\subsection{例3}
-\lstinputlisting{test3.tc}
-\paragraph{結果}
-\begin{verbatim}
-parse error on value "a" (IDENTIFIER)
-\end{verbatim}
-\subsection{例4}
-\lstinputlisting{test4.tc}
-\paragraph{結果}
-\begin{verbatim}
-success!!! 
- result => int
-\end{verbatim}
-\subsection{例5}
-\lstinputlisting{test5.tc}
-\paragraph{結果}
-\begin{verbatim}
-parse error on value 1 (CONSTANT)
-\end{verbatim}
 %%
 %%
 \section{感想}
-raccを使えば文脈自由文法形式の記述で簡単にパーサが生成できて便利だと思った。TinyCでなくても、構文解析器を作ることが出来るようになったと思う。
+
 \end{document}

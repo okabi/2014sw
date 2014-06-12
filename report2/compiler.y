@@ -22,16 +22,23 @@ class Tinyc
     right '(' '{'
     left ')' '}'
   preclow
+
 rule
   program
       : external_declaration
       | program external_declaration
         {
-	  result = [val[0], val[1]] 
+	  result = val[0] + val[1] 
         }  
   external_declaration
       : declaration
+      {
+	result = val[0]
+      }
       | function_definition
+      {
+	result = [val[0]]
+      }
   declaration
       : DATATYPE declarator_list ';'
         {
@@ -52,9 +59,15 @@ rule
   declarator
       : IDENTIFIER
   function_definition
-      : DATATYPE declarator '(' parameter_type_list_opt ')' compound_statement
+      : DATATYPE IDENTIFIER '('
         {
-	  result = [ [val[0], val[1]], val[3], val[5] ]
+	}   
+        parameter_type_list_opt ')' 
+	{
+	}
+        compound_statement
+        {
+	  result = [ [val[0], val[1]], val[4], val[7] ]
         }  
   parameter_type_list
       : parameter_declaration
@@ -63,11 +76,14 @@ rule
 	}
       | parameter_type_list ',' parameter_declaration
         {
-          result = [val[0]] + [val[2]]
+          result = val[0] + [val[2]]
         }  
   parameter_type_list_opt
       : parameter_type_list
       | /* none */
+      {
+	result = []
+      }
   parameter_declaration
       : DATATYPE declarator
         {
@@ -100,14 +116,17 @@ rule
 	  result = [['RETURN'] + val[1]]
         }       
   compound_statement
-      : '{' declaration_list_opt statement_list_opt '}'
+      : '{'
+        {
+        }   
+        declaration_list_opt statement_list_opt '}'
         {
 	  result = []
-          if val[1] != nil
-	    result += val[1]
-	  end
-	  if val[2] != nil
+          if val[2] != nil
 	    result += val[2]
+	  end
+	  if val[3] != nil
+	    result += val[3]
 	  end
         }       
   declaration_list
@@ -213,10 +232,17 @@ rule
       : primary_expr
       | IDENTIFIER '(' argument_expression_list_opt ')'
         {
-	  result = ['FCALL',val[0]] + [val[2]]
+          if val[2] == nil
+	    result = ['FCALL',val[0], []]
+	  else
+	    result = ['FCALL',val[0]] + [val[2]]
+          end
         }
   primary_expr
       : IDENTIFIER
+        {
+          result = val[0]
+	}
       | CONSTANT
       | '(' expression ')'
         {
@@ -229,7 +255,7 @@ rule
         }  
       | argument_expression_list ',' assign_expr
         {
-	  result = [val[0], val[2]]
+	  result = val[0] + [val[2]]
         }
   argument_expression_list_opt
       : argument_expression_list

@@ -36,12 +36,18 @@ rule
 	  if @error_num > 0
             result = ''
           else
-	    result = [val[0], val[1]] 
+	    result = val[0] + val[1] 
           end
         }  
   external_declaration
       : declaration
+      {
+	result = val[0]
+      }
       | function_definition
+      {
+	result = [val[0]]
+      }
   declaration
       : DATATYPE declarator_list ';'
         {
@@ -106,7 +112,11 @@ rule
 	    if check2['level'] >= 0
 	      error(1, val[1], check2['level'])
 	    else
-	      changeFunctionInfo(val[1], val[4].length)
+	      if val[4] == nil
+                changeFunctionInfo(val[1], 0)
+	      else
+                changeFunctionInfo(val[1], val[4].length)
+              end
 	    end
 	  end
 	  while @error_stack.length > 0
@@ -133,6 +143,9 @@ rule
   parameter_type_list_opt
       : parameter_type_list
       | /* none */
+      {
+	result = []
+      }
   parameter_declaration
       : DATATYPE declarator
         {
@@ -315,11 +328,15 @@ rule
 	    else
 	      @error_stack.push(Object.new(val[0], 0, 'UNDEFFUN', 0))
             end
-	  elsif val[2].length != check['size']
+	  elsif (val[2] == nil && check['size'] != 0) || val[2].length != check['size']
 	    error(2, val[0], check['size'])
 	  end
 	  val[0] += ":level0"
-          result = ['FCALL',val[0]] + [val[2]]
+          if val[2] == nil
+	    result = ['FCALL',val[0], []]
+	  else
+	    result = ['FCALL',val[0]] + [val[2]]
+          end
         }
   primary_expr
       : IDENTIFIER

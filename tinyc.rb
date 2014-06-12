@@ -9,7 +9,7 @@ require 'racc/parser.rb'
 # $Id: calc.y,v 1.4 2005/11/20 13:29:32 aamine Exp $
 class Tinyc < Racc::Parser
 
-module_eval(<<'...end compiler.y/module_eval...', 'compiler.y', 356)
+module_eval(<<'...end compiler.y/module_eval...', 'compiler.y', 373)
 
   class Object
     def initialize(name, level, type, offset)
@@ -279,8 +279,8 @@ racc_reduce_table = [
   0, 0, :racc_error,
   1, 30, :_reduce_1,
   2, 30, :_reduce_2,
-  1, 31, :_reduce_none,
-  1, 31, :_reduce_none,
+  1, 31, :_reduce_3,
+  1, 31, :_reduce_4,
   3, 32, :_reduce_5,
   1, 34, :_reduce_6,
   3, 34, :_reduce_7,
@@ -291,7 +291,7 @@ racc_reduce_table = [
   1, 38, :_reduce_12,
   3, 38, :_reduce_13,
   1, 36, :_reduce_none,
-  0, 36, :_reduce_none,
+  0, 36, :_reduce_15,
   2, 41, :_reduce_16,
   1, 42, :_reduce_17,
   2, 42, :_reduce_18,
@@ -483,18 +483,30 @@ module_eval(<<'.,.,', 'compiler.y', 35)
     	  if @error_num > 0
             result = ''
           else
-	    result = [val[0], val[1]] 
+	    result = val[0] + val[1] 
           end
         
     result
   end
 .,.,
 
-# reduce 3 omitted
+module_eval(<<'.,.,', 'compiler.y', 44)
+  def _reduce_3(val, _values, result)
+    	result = val[0]
+      
+    result
+  end
+.,.,
 
-# reduce 4 omitted
+module_eval(<<'.,.,', 'compiler.y', 48)
+  def _reduce_4(val, _values, result)
+    	result = [val[0]]
+      
+    result
+  end
+.,.,
 
-module_eval(<<'.,.,', 'compiler.y', 47)
+module_eval(<<'.,.,', 'compiler.y', 53)
   def _reduce_5(val, _values, result)
     	  result = []
 	  for i in val[1]
@@ -527,7 +539,7 @@ module_eval(<<'.,.,', 'compiler.y', 47)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 77)
+module_eval(<<'.,.,', 'compiler.y', 83)
   def _reduce_6(val, _values, result)
     	  result = [val[0]]
         
@@ -535,7 +547,7 @@ module_eval(<<'.,.,', 'compiler.y', 77)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 81)
+module_eval(<<'.,.,', 'compiler.y', 87)
   def _reduce_7(val, _values, result)
     	  result += [val[2]]
         
@@ -545,7 +557,7 @@ module_eval(<<'.,.,', 'compiler.y', 81)
 
 # reduce 8 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 88)
+module_eval(<<'.,.,', 'compiler.y', 94)
   def _reduce_9(val, _values, result)
               @level += 1
 	  @add_sp = 4
@@ -555,7 +567,7 @@ module_eval(<<'.,.,', 'compiler.y', 88)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 94)
+module_eval(<<'.,.,', 'compiler.y', 100)
   def _reduce_10(val, _values, result)
     	  @add_sp = 0
 	
@@ -563,7 +575,7 @@ module_eval(<<'.,.,', 'compiler.y', 94)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 98)
+module_eval(<<'.,.,', 'compiler.y', 104)
   def _reduce_11(val, _values, result)
     	  popStack(@level)
 	  @level -= 1
@@ -575,7 +587,11 @@ module_eval(<<'.,.,', 'compiler.y', 98)
 	    if check2['level'] >= 0
 	      error(1, val[1], check2['level'])
 	    else
-	      changeFunctionInfo(val[1], val[4].length)
+	      if val[4] == nil
+                changeFunctionInfo(val[1], 0)
+	      else
+                changeFunctionInfo(val[1], val[4].length)
+              end
 	    end
 	  end
 	  while @error_stack.length > 0
@@ -594,7 +610,7 @@ module_eval(<<'.,.,', 'compiler.y', 98)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 126)
+module_eval(<<'.,.,', 'compiler.y', 136)
   def _reduce_12(val, _values, result)
     	  result = [val[0]]
 	
@@ -602,7 +618,7 @@ module_eval(<<'.,.,', 'compiler.y', 126)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 130)
+module_eval(<<'.,.,', 'compiler.y', 140)
   def _reduce_13(val, _values, result)
               result = val[0] + [val[2]]
         
@@ -612,9 +628,15 @@ module_eval(<<'.,.,', 'compiler.y', 130)
 
 # reduce 14 omitted
 
-# reduce 15 omitted
+module_eval(<<'.,.,', 'compiler.y', 146)
+  def _reduce_15(val, _values, result)
+    	result = []
+      
+    result
+  end
+.,.,
 
-module_eval(<<'.,.,', 'compiler.y', 138)
+module_eval(<<'.,.,', 'compiler.y', 151)
   def _reduce_16(val, _values, result)
     	  check = findObject(val[1], 'VAR')
 	  if check['level'] == @level
@@ -641,7 +663,7 @@ module_eval(<<'.,.,', 'compiler.y', 138)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 162)
+module_eval(<<'.,.,', 'compiler.y', 175)
   def _reduce_17(val, _values, result)
     	  result = ''
         
@@ -649,7 +671,7 @@ module_eval(<<'.,.,', 'compiler.y', 162)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 166)
+module_eval(<<'.,.,', 'compiler.y', 179)
   def _reduce_18(val, _values, result)
     	  result = val[0]
         
@@ -659,7 +681,7 @@ module_eval(<<'.,.,', 'compiler.y', 166)
 
 # reduce 19 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 171)
+module_eval(<<'.,.,', 'compiler.y', 184)
   def _reduce_20(val, _values, result)
     	  result = [['IF'] + val[2] + [val[4]]]
         
@@ -667,7 +689,7 @@ module_eval(<<'.,.,', 'compiler.y', 171)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 175)
+module_eval(<<'.,.,', 'compiler.y', 188)
   def _reduce_21(val, _values, result)
     	  result = [['IF'] + val[2] + [val[4], val[6]]]
         
@@ -675,7 +697,7 @@ module_eval(<<'.,.,', 'compiler.y', 175)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 179)
+module_eval(<<'.,.,', 'compiler.y', 192)
   def _reduce_22(val, _values, result)
     	  result = [['WHILE'] + val[2] + [val[4]]]
         
@@ -683,7 +705,7 @@ module_eval(<<'.,.,', 'compiler.y', 179)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 183)
+module_eval(<<'.,.,', 'compiler.y', 196)
   def _reduce_23(val, _values, result)
     	  result = [['RETURN'] + val[1]]
         
@@ -691,7 +713,7 @@ module_eval(<<'.,.,', 'compiler.y', 183)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 188)
+module_eval(<<'.,.,', 'compiler.y', 201)
   def _reduce_24(val, _values, result)
     	  @level += 1
         
@@ -699,7 +721,7 @@ module_eval(<<'.,.,', 'compiler.y', 188)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 192)
+module_eval(<<'.,.,', 'compiler.y', 205)
   def _reduce_25(val, _values, result)
     	  popStack(@level)
 	  @level -= 1
@@ -717,7 +739,7 @@ module_eval(<<'.,.,', 'compiler.y', 192)
 
 # reduce 26 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 206)
+module_eval(<<'.,.,', 'compiler.y', 219)
   def _reduce_27(val, _values, result)
     	  result = [val[0], val[1]]
         
@@ -731,7 +753,7 @@ module_eval(<<'.,.,', 'compiler.y', 206)
 
 # reduce 30 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 215)
+module_eval(<<'.,.,', 'compiler.y', 228)
   def _reduce_31(val, _values, result)
     	  result = val[0] + val[1]
         
@@ -743,7 +765,7 @@ module_eval(<<'.,.,', 'compiler.y', 215)
 
 # reduce 33 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 223)
+module_eval(<<'.,.,', 'compiler.y', 236)
   def _reduce_34(val, _values, result)
     	  result = [val[0]]
 	
@@ -751,7 +773,7 @@ module_eval(<<'.,.,', 'compiler.y', 223)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 227)
+module_eval(<<'.,.,', 'compiler.y', 240)
   def _reduce_35(val, _values, result)
     	  result = [val[0], val[2]]
         
@@ -761,7 +783,7 @@ module_eval(<<'.,.,', 'compiler.y', 227)
 
 # reduce 36 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 233)
+module_eval(<<'.,.,', 'compiler.y', 246)
   def _reduce_37(val, _values, result)
       	  check = findObject(val[0], 'VAR')
 	  if check['level'] < 0
@@ -776,7 +798,7 @@ module_eval(<<'.,.,', 'compiler.y', 233)
 
 # reduce 38 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 244)
+module_eval(<<'.,.,', 'compiler.y', 257)
   def _reduce_39(val, _values, result)
     	  result = ['||', val[0], val[2]]
         
@@ -786,7 +808,7 @@ module_eval(<<'.,.,', 'compiler.y', 244)
 
 # reduce 40 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 250)
+module_eval(<<'.,.,', 'compiler.y', 263)
   def _reduce_41(val, _values, result)
     	  result = ['&&', val[0], val[2]]
         
@@ -796,7 +818,7 @@ module_eval(<<'.,.,', 'compiler.y', 250)
 
 # reduce 42 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 256)
+module_eval(<<'.,.,', 'compiler.y', 269)
   def _reduce_43(val, _values, result)
     	  result = ['==', val[0], val[2]]
         
@@ -804,7 +826,7 @@ module_eval(<<'.,.,', 'compiler.y', 256)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 260)
+module_eval(<<'.,.,', 'compiler.y', 273)
   def _reduce_44(val, _values, result)
     	  result = ['!=', val[0], val[2]]
         
@@ -814,7 +836,7 @@ module_eval(<<'.,.,', 'compiler.y', 260)
 
 # reduce 45 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 266)
+module_eval(<<'.,.,', 'compiler.y', 279)
   def _reduce_46(val, _values, result)
     	  result = ['<', val[0], val[2]]
         
@@ -822,7 +844,7 @@ module_eval(<<'.,.,', 'compiler.y', 266)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 270)
+module_eval(<<'.,.,', 'compiler.y', 283)
   def _reduce_47(val, _values, result)
     	  result = ['>', val[0], val[2]]
         
@@ -830,7 +852,7 @@ module_eval(<<'.,.,', 'compiler.y', 270)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 274)
+module_eval(<<'.,.,', 'compiler.y', 287)
   def _reduce_48(val, _values, result)
     	  result = ['<=', val[0], val[2]]
         
@@ -838,7 +860,7 @@ module_eval(<<'.,.,', 'compiler.y', 274)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 278)
+module_eval(<<'.,.,', 'compiler.y', 291)
   def _reduce_49(val, _values, result)
     	  result = ['>=', val[0], val[2]]
         
@@ -848,7 +870,7 @@ module_eval(<<'.,.,', 'compiler.y', 278)
 
 # reduce 50 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 284)
+module_eval(<<'.,.,', 'compiler.y', 297)
   def _reduce_51(val, _values, result)
     	  result = ['+', val[0], val[2]]
         
@@ -856,7 +878,7 @@ module_eval(<<'.,.,', 'compiler.y', 284)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 288)
+module_eval(<<'.,.,', 'compiler.y', 301)
   def _reduce_52(val, _values, result)
     	  result = ['-', val[0], val[2]]
         
@@ -866,7 +888,7 @@ module_eval(<<'.,.,', 'compiler.y', 288)
 
 # reduce 53 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 294)
+module_eval(<<'.,.,', 'compiler.y', 307)
   def _reduce_54(val, _values, result)
     	  result = ['*', val[0], val[2]]
         
@@ -874,7 +896,7 @@ module_eval(<<'.,.,', 'compiler.y', 294)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 298)
+module_eval(<<'.,.,', 'compiler.y', 311)
   def _reduce_55(val, _values, result)
     	  result = ['/', val[0], val[2]]
         
@@ -884,7 +906,7 @@ module_eval(<<'.,.,', 'compiler.y', 298)
 
 # reduce 56 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 304)
+module_eval(<<'.,.,', 'compiler.y', 317)
   def _reduce_57(val, _values, result)
     	  result = -(val[1].to_i).to_s
         
@@ -894,7 +916,7 @@ module_eval(<<'.,.,', 'compiler.y', 304)
 
 # reduce 58 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 310)
+module_eval(<<'.,.,', 'compiler.y', 323)
   def _reduce_59(val, _values, result)
       	  check = findObject(val[0], 'FUN')
 	  if check['level'] < 0
@@ -903,17 +925,21 @@ module_eval(<<'.,.,', 'compiler.y', 310)
 	    else
 	      @error_stack.push(Object.new(val[0], 0, 'UNDEFFUN', 0))
             end
-	  elsif val[2].length != check['size']
+	  elsif (val[2] == nil && check['size'] != 0) || val[2].length != check['size']
 	    error(2, val[0], check['size'])
 	  end
 	  val[0] += ":level0"
-          result = ['FCALL',val[0]] + [val[2]]
+          if val[2] == nil
+	    result = ['FCALL',val[0], []]
+	  else
+	    result = ['FCALL',val[0]] + [val[2]]
+          end
         
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 326)
+module_eval(<<'.,.,', 'compiler.y', 343)
   def _reduce_60(val, _values, result)
       	  check = findObject(val[0], 'VAR')
 	  if check['level'] < 0
@@ -928,7 +954,7 @@ module_eval(<<'.,.,', 'compiler.y', 326)
 
 # reduce 61 omitted
 
-module_eval(<<'.,.,', 'compiler.y', 336)
+module_eval(<<'.,.,', 'compiler.y', 353)
   def _reduce_62(val, _values, result)
     	  result = [val[1]]
         
@@ -936,7 +962,7 @@ module_eval(<<'.,.,', 'compiler.y', 336)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 341)
+module_eval(<<'.,.,', 'compiler.y', 358)
   def _reduce_63(val, _values, result)
     	  result = [val[0]]
         
@@ -944,7 +970,7 @@ module_eval(<<'.,.,', 'compiler.y', 341)
   end
 .,.,
 
-module_eval(<<'.,.,', 'compiler.y', 345)
+module_eval(<<'.,.,', 'compiler.y', 362)
   def _reduce_64(val, _values, result)
     	  result = val[0] + [val[2]]
         

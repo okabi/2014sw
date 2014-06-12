@@ -2,7 +2,7 @@ int x;
 int f(int x, int y)
 {
 	int x;
-	{
+	while(x > 0){
 		int x, y;
 		x+y;
 		{
@@ -16,9 +16,9 @@ int f(int x, int y)
 	}
 	x+y;
 }
-int g(int y)
+int g()
 {
 	int z;
-	f(x, y);
-	g(z);
+	f(x, x);
+	g();
 }

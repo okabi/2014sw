@@ -1,0 +1,65 @@
+# -*- coding: utf-8 -*-
+def generateAssemble(tree)
+  filename = ARGV[0]
+  if filename == nil
+    filename = "test.asm"
+  end
+  file = open(filename, "w")
+  functions = []
+
+  def putsFile(a, b=nil, c=nil, d=nil)
+    file.print("#{a}") if a != nil
+    file.print("\t#{b}") if b != nil
+    file.print("\t#{c}") if c != nil
+    file.print(", #{d}") if d != nil
+    file.puts("")
+  end
+
+  def digTree(parent_node, child_node)
+    if child_node[0].instance_of?(String) == true
+      case child_node[0]
+      when "int"
+        child_node[1] =~ /(.+):(.+):(.+)/
+        name = $1
+        type = $2
+        level = $3
+        pos = nil
+        if level.index("level0") == nil
+          child_node[1] =~ /(.+):(.+):level(.+)\((.+)\)/
+          level = $3.to_i
+          pos = $4.to_i
+        else
+          level =~ /level(.+)/
+          level = $1.to_i
+        end
+        if level == 0
+          if type == "VAR"
+            putsFile(nil, "GLOBAL", name)
+            putsFile(nil, "COMMON", name, 4)
+          elsif type == "FUN"
+            putsFile(nil, "GLOBAL", name)
+            putsFile(name, "push", "ebp")           
+            putsFile(nil, "mov", "ebp", "esp")
+            n_local = 0
+            for node in parent_node[2]
+              n_local += 4 if node[0] == "int"
+            end
+            putsFile(nil, "sub", "esp", "#{n_local}")
+            file.puts("; 関数#{name}の本体")
+            putsFile("Lret", "mov", "esp", "ebp")
+            putsFile(nil, "pop", "ebp")
+            putsFile(ret)
+          end
+        else
+          #レベル0以外での処理
+        end
+      when
+    else
+      for grandchild in child_node
+        digTree(child_node, grandchild)
+      end
+    end
+  end
+
+  digTree(nil, tree)
+end

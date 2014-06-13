@@ -1,4 +1,4 @@
-This is e-pTeX, Version 3.1415926-p3.3-110825-2.4 (utf8.euc) (TeX Live 2012/Debian) (format=platex 2014.3.12)  12 JUN 2014 16:15
+This is e-pTeX, Version 3.1415926-p3.3-110825-2.4 (utf8.euc) (TeX Live 2012/Debian) (format=platex 2014.3.12)  13 JUN 2014 10:23
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -145,22 +145,74 @@ File: omlcmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
 LaTeX Font Info:    Font shape `OML/cmr/m/n' in size <10.95> not available
 (Font)              Font shape `OML/cmm/m/it' tried instead on input line 20.
  [1] [2] [3] [4]
-[5] [6] [7] [8])
+[5] [6] [7] [8]) [9] [10]
 LaTeX Font Info:    Font shape `JT1/mc/bx/n' in size <12> not available
-(Font)              Font shape `JT1/gt/m/n' tried instead on input line 35.
+(Font)              Font shape `JT1/gt/m/n' tried instead on input line 113.
 LaTeX Font Info:    Font shape `JY1/mc/bx/n' in size <12> not available
-(Font)              Font shape `JY1/gt/m/n' tried instead on input line 35.
- [9] [10] [11]
+(Font)              Font shape `JY1/gt/m/n' tried instead on input line 113.
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <12> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 134.
- [12] (./test.tc [13]) [14] (./report2.aux) ) 
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 128.
+ [11] [12] [13]
+Overfull \hbox (27.20615pt too wide) in alignment at lines 195--207
+ [][][] []
+ []
+
+[14] (./test.tc)
+Overfull \hbox (84.95023pt too wide) in paragraph at lines 226--226
+[]\OT1/cmtt/m/n/12 [["int", "x"], [["int", "f"], [["int", "x"], ["int", "y"]], 
+[["int", "x"],[] 
+ []
+
+
+Overfull \hbox (72.60022pt too wide) in paragraph at lines 226--226
+[]\OT1/cmtt/m/n/12 ["int", "x"], ["int", "y"], ["+", "x", "y"], ["int", "x"], [
+"int", "z"],[] 
+ []
+
+
+Overfull \hbox (66.42522pt too wide) in paragraph at lines 226--226
+[]\OT1/cmtt/m/n/12 ["+", ["+", "x", "y"], "z"], ["int", "w"], ["+", ["+", "x", 
+"y"], "w"],[] 
+ []
+
+(./test2.tc [15])
+Overfull \hbox (78.77522pt too wide) in paragraph at lines 237--237
+[]\OT1/cmtt/m/n/12 [[["int", "gcd"], [["int", "a"], ["int", "b"]], [["IF", ["==
+", "a", "b"],[] 
+ []
+
+
+Overfull \hbox (72.60022pt too wide) in paragraph at lines 237--237
+[]\OT1/cmtt/m/n/12 [["RETURN", "a"]], [["IF", [">", "a", "b"], [["RETURN", ["FC
+ALL", "gcd",[] 
+ []
+
+
+Overfull \hbox (72.60022pt too wide) in paragraph at lines 237--237
+[]\OT1/cmtt/m/n/12 [["-", "a", "b"], "b"]]]], [["RETURN", ["FCALL", "gcd", ["a"
+, ["-", "b",[] 
+ []
+
+(./test3.tc)
+Overfull \hbox (84.95023pt too wide) in paragraph at lines 247--247
+[]\OT1/cmtt/m/n/12 [[["int", "fact"], [["int", "x"]], [["int", "z"], ["=", "z",
+ 1], ["WHILE",[] 
+ []
+
+
+Overfull \hbox (84.95023pt too wide) in paragraph at lines 247--247
+[]\OT1/cmtt/m/n/12 [">=", "x", 1], [["=", "z", ["*", "z", "x"]], ["=", "x", ["-
+", "x", 1]]]],[] 
+ []
+
+[16] (./report2.aux) ) 
 Here is how much of TeX's memory you used:
- 1907 strings out of 495286
- 26453 string characters out of 3186620
- 152719 words of memory out of 3000000
+ 1913 strings out of 495286
+ 26499 string characters out of 3186620
+ 149719 words of memory out of 3000000
  5241 multiletter control sequences out of 15000+200000
  17295 words of font info for 67 fonts, out of 3000000 for 9000
  14 hyphenation exceptions out of 8191
  31i,8n,32p,379b,1535s stack positions out of 5000i,500n,10000p,200000b,50000s
 
-Output written on report2.dvi (15 pages, 35216 bytes).
+Output written on report2.dvi (17 pages, 42200 bytes).

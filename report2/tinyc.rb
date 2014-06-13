@@ -6,10 +6,10 @@
 
 require 'racc/parser.rb'
 
-# $Id: calc.y,v 1.4 2005/11/20 13:29:32 aamine Exp $
+
 class Tinyc < Racc::Parser
 
-module_eval(<<'...end compiler.y/module_eval...', 'compiler.y', 268)
+module_eval(<<'...end compiler.y/module_eval...', 'compiler.y', 267)
   
   def parse(str)
     @q = []

@@ -1,24 +1,6 @@
-int x;
-int f(int x, int y)
+int gcd(int a, int b)
 {
-	int x;
-	{
-		int x, y;
-		x+y;
-		{
-			int x, z;
-			x+y+z;
-		}
-	}
-	{
-		int w;
-		x+y+w;
-	}
-	x+y;
-}
-int g()
-{
-	int z;
-	f(x, y);
-	g();
+	if (a == b) return a;
+	else if (a > b) return gcd(a-b, b);
+	else return gcd(a, b-a);
 }

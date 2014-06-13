@@ -263,7 +263,6 @@ rule
 end
 
 ---- header
-# $Id: calc.y,v 1.4 2005/11/20 13:29:32 aamine Exp $
 ---- inner
   
   def parse(str)

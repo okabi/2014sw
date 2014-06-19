@@ -6,6 +6,17 @@
     nasm -f elf test.asm
     gcc -m32 -lc -o program main.c test.asm
 
+* 関数呼び出し時の処理がまだ
+
+* 除算処理がまだ
+
+* WHILE、IF処理がまだ
+
+* 戻り値処理がまだ
+
+
+
+
 
 * コード生成部で考慮する必要のあるもの
   * GLOBAL

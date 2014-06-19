@@ -7,7 +7,7 @@ int f(int x, int y)
 		x+y;
 		{
 			int x, z;
-			x = x*y-z/x;
+			x = x*3-z/x;
 		}
 	}
 	{

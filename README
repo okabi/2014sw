@@ -6,13 +6,9 @@
     nasm -f elf test.asm
     gcc -m32 -lc -o program main.c test.asm
 
-* 関数呼び出し時の処理がまだ
+* IFがまだ
 
-* 除算処理がまだ
-
-* WHILE、IF処理がまだ
-
-* 戻り値処理がまだ
+* 論理演算(&&, ||)がまだ
 
 
 

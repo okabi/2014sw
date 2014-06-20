@@ -12,6 +12,12 @@ $functions = []
 # 宣言されたローカル変数名(レベル含む)のリスト
 $local_vars = {}
 
+# 宣言されたIF文の数
+$local_ifs = 0
+
+# 宣言されたWHILE文の数
+$local_whiles = 0
+
 # 関数culcNLocal用
 $n_local = 0
 
@@ -111,15 +117,20 @@ def generateAssemble(tree)
             putsFile(nil, "sub", "esp", "#{$n_local}")
             
             $file.puts("; 関数#{name}の本体ここから")
+            for grandchild in parent_node[1]
+              digTree(child_node, grandchild, lvl + 1)
+            end
             for grandchild in parent_node[2]
               digTree(child_node, grandchild, lvl + 1)
             end
             $file.puts("; 関数#{name}の本体ここまで")
             
-            putsFile("#{name}ret", "mov", "esp", "ebp")
+            putsFile("#{name}_ret", "mov", "esp", "ebp")
             putsFile(nil, "pop", "ebp")
             putsFile(nil, "ret")
             $local_vars.clear
+            $local_ifs = 0
+            $local_whiles = 0
           end
         else
           $local_vars["#{name}:#{type}:level#{level}"] = pos
@@ -127,9 +138,44 @@ def generateAssemble(tree)
         end
       when "WHILE"
         $file.puts("; WHILEここから")
+        $file.print("#{$functions[$functions.length-1]}_while#{$local_whiles}")
+        putsFile(nil, "mov", "eax", leafToCode(child_node[1][2]))                  
         for grandchild in child_node[2]
           digTree(child_node[2], grandchild, lvl + 1)
         end
+        if child_node[1][2].instance_of?(String) == true || child_node[1][2].instance_of?(Fixnum) == true
+          putsFile(nil, "mov", "eax", leafToCode(child_node[1][2]))          
+          putsFile(nil, "push", "eax")
+        else
+          digTree(child_node, child_node[1][2], lvl + 1)
+          putsFile(nil, "push", "eax")
+        end
+        if child_node[1][1].instance_of?(String) == true || child_node[1][1].instance_of?(Fixnum) == true
+          putsFile(nil, "mov", "eax", leafToCode(child_node[1][1]))
+        else
+          digTree(child_node, child_node[1][1], lvl + 1)
+        end
+        putsFile(nil, "pop", "ebx")        
+        putsFile(nil, "cmp", "eax", "ebx")                
+        case child_node[1][0]
+        when "=="
+          putsFile(nil, "sete", "al")                  
+        when "!="
+          putsFile(nil, "setne", "al")                  
+        when ">"
+          putsFile(nil, "setg", "al")                  
+        when "<"
+          putsFile(nil, "setl", "al")                  
+        when ">="
+          putsFile(nil, "setge", "al")                  
+        when "<="
+          putsFile(nil, "setle", "al")                  
+        end
+        putsFile(nil, "movzx", "eax", "al")
+
+        putsFile(nil, "cmp", "eax", 0)
+        putsFile(nil, "jne", "#{$functions[$functions.length-1]}_while#{$local_whiles}")
+        $local_whiles += 1
         $file.puts("; WHILEここまで")
       when "IF"
         $file.puts("; IFここから")
@@ -144,7 +190,12 @@ def generateAssemble(tree)
       when "FCALL"
         # 引数に数式が使われている場合は上手くいかないので、もう少し検討する
         child_node[2].length.times do |i|
-          putsFile(nil, "push", "#{child_node[2][child_node[2].length-1-i]}")
+          if child_node[2][child_node[2].length-1-i].instance_of?(String) == true || child_node[2][child_node[2].length-1-i].instance_of?(Fixnum) == true
+            putsFile(nil, "mov", "eax", leafToCode(child_node[2][child_node[2].length-1-i]))
+          else
+            digTree(child_node[2], child_node[2][child_node[2].length-1-i], lvl + 1)
+          end
+          putsFile(nil, "push", "eax")
         end
         if $functions.index(child_node[1]) == nil
           putsFile(nil, "EXTERN", child_node[1])          
@@ -153,11 +204,23 @@ def generateAssemble(tree)
         child_node[2].length.times do |i|
           putsFile(nil, "pop", "ebx")
         end
+      when "RETURN"
+        # 戻り値をeaxに設定してreturnラベルに飛ぶ
+        if child_node[1].instance_of?(String) == true || child_node[1].instance_of?(Fixnum) == true
+          putsFile(nil, "mov", "eax", leafToCode(child_node[1]))
+        else
+          digTree(child_node, child_node[1], lvl + 1)
+        end
+        putsFile(nil, "jmp", "#{$functions[$functions.length - 1]}_ret")        
+
       when "="
         # 代入命令
         $file.puts("; = ここから(#{child_node[1]}, #{child_node[2]})")
-        if child_node[2].instance_of?(String) == true || child_node[2].instance_of?(Fixnum) == true
+        if child_node[2].instance_of?(String) == true
           putsFile(nil, "mov", leafToCode(child_node[1]), leafToCode(child_node[2]))
+        elsif child_node[2].instance_of?(Fixnum) == true
+          putsFile(nil, "mov", "eax", leafToCode(child_node[2]))
+          putsFile(nil, "mov", leafToCode(child_node[1]), "eax")          
         else
           digTree(child_node, child_node[2], lvl + 1)
           putsFile(nil, "mov", leafToCode(child_node[1]), "eax")
@@ -218,7 +281,24 @@ def generateAssemble(tree)
         putsFile(nil, "imul", "eax", "ebx")
         $file.puts("; * ここまで(#{child_node[1]}, #{child_node[2]})")
       when "/"
-        $file.puts("; / めんどい")
+        # 除算命令
+        $file.puts("; / ここから(#{child_node[1]}, #{child_node[2]})")
+        if child_node[2].instance_of?(String) == true || child_node[2].instance_of?(Fixnum) == true
+          putsFile(nil, "mov", "eax", leafToCode(child_node[2]))          
+          putsFile(nil, "push", "eax")
+        else
+          digTree(child_node, child_node[2], lvl + 1)
+          putsFile(nil, "push", "eax")
+        end
+        if child_node[1].instance_of?(String) == true || child_node[1].instance_of?(Fixnum) == true
+          putsFile(nil, "mov", "eax", leafToCode(child_node[1]))
+        else
+          digTree(child_node, child_node[1], lvl + 1)
+        end
+        putsFile(nil, "cdq")
+        putsFile(nil, "pop", "ebx")        
+        putsFile(nil, "idiv", "dword ebx")
+        $file.puts("; / ここまで(#{child_node[1]}, #{child_node[2]})")
       end    
 
     else

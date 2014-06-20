@@ -1,4 +1,8 @@
 #include <stdio.h>
 main(){
-  printf("%d\n", foo(3));
+  int i;
+  int j;
+  for(i = 0; i < 20; i++){
+    printf("fact(%d) => %d\n", i, fact(i));
+  }
 }

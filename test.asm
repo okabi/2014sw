@@ -40,11 +40,11 @@ fact_if0:
 fact_ret	mov	esp, ebp
 	pop	ebp
 	ret
-	GLOBAL	bigger
-bigger	push	ebp
+	GLOBAL	fib
+fib	push	ebp
 	mov	ebp, esp
 	sub	esp, 0
-; 関数biggerの本体ここから
+; 関数fibの本体ここから
 ; local_vars: n:VAR:level1 => 8
 ; IFここから
 	mov	eax, 0
@@ -52,54 +52,113 @@ bigger	push	ebp
 	mov	eax, [ebp+8]
 	pop	ebx
 	cmp	eax, ebx
-	setle	al
+	sete	al
 	movzx	eax, al
 	cmp	eax, 0
-	je	bigger_if0
+	je	fib_if0
 	mov	eax, 0
-	jmp	bigger_ret
-bigger_if0:
-; この先else
-; IFここまで
-; IFここから
-; && ここから([[["||", [">=", "n:VAR:level1", 1], [">=", "n:VAR:level1", 5]]]], ["<=", "n:VAR:level1", 10])
-	mov	eax, 0
-	push	eax
-	cmp	eax, 0
-	je	bigger_logical0
-	cmp	eax, 0
-	je	bigger_logical0
-	pop	eax
-	mov	eax, 1
-	push	eax
-bigger_logical0:
-	pop	eax
-	cmp	eax, 0
-; && ここまで([[["||", [">=", "n:VAR:level1", 1], [">=", "n:VAR:level1", 5]]]], ["<=", "n:VAR:level1", 10])
-	je	bigger_if1
-	mov	eax, 1
-	jmp	bigger_ret
-bigger_if1:
+	jmp	fib_ret
+fib_if0:
 ; この先else
 ; IFここから
-	mov	eax, 100
+	mov	eax, 1
 	push	eax
 	mov	eax, [ebp+8]
 	pop	ebx
 	cmp	eax, ebx
-	setl	al
+	sete	al
 	movzx	eax, al
 	cmp	eax, 0
-	je	bigger_if2
-	mov	eax, 2
-	jmp	bigger_ret
-bigger_if2:
+	je	fib_if1
+	mov	eax, 1
+	jmp	fib_ret
+fib_if1:
 ; この先else
-	mov	eax, 3
-	jmp	bigger_ret
+; + ここから(["FCALL", "fib", [["-", "n:VAR:level1", 1]]], ["FCALL", "fib", [["-", "n:VAR:level1", 2]]])
+; - ここから(n:VAR:level1, 2)
+	mov	eax, 2
+	push	eax
+	mov	eax, [ebp+8]
+	pop	ebx
+	sub	eax, ebx
+; - ここまで(n:VAR:level1, 2)
+	push	eax
+	call	fib
+	pop	ebx
+	push	eax
+; - ここから(n:VAR:level1, 1)
+	mov	eax, 1
+	push	eax
+	mov	eax, [ebp+8]
+	pop	ebx
+	sub	eax, ebx
+; - ここまで(n:VAR:level1, 1)
+	push	eax
+	call	fib
+	pop	ebx
+	pop	ebx
+	add	eax, ebx
+; + ここまで(["FCALL", "fib", [["-", "n:VAR:level1", 1]]], ["FCALL", "fib", [["-", "n:VAR:level1", 2]]])
+	jmp	fib_ret
 ; IFここまで
 ; IFここまで
-; 関数biggerの本体ここまで
-bigger_ret	mov	esp, ebp
+; 関数fibの本体ここまで
+fib_ret	mov	esp, ebp
+	pop	ebp
+	ret
+	GLOBAL	sum
+sum	push	ebp
+	mov	ebp, esp
+	sub	esp, 8
+; 関数sumの本体ここから
+; local_vars: n:VAR:level1 => 8
+; local_vars: i:VAR:level2 => -4
+; local_vars: ans:VAR:level2 => -8
+; = ここから(i:VAR:level2, 1)
+	mov	eax, 1
+	mov	[ebp-4], eax
+; = ここまで(i:VAR:level2, 1)
+; = ここから(ans:VAR:level2, 0)
+	mov	eax, 0
+	mov	[ebp-8], eax
+; = ここまで(ans:VAR:level2, 0)
+; WHILEここから
+sum_whilestart0:
+	mov	eax, [ebp+8]
+	push	eax
+	mov	eax, [ebp-4]
+	pop	ebx
+	cmp	eax, ebx
+	setle	al
+	movzx	eax, al
+	cmp	eax, 0
+	je	sum_whileend0
+; = ここから(ans:VAR:level2, ["+", "ans:VAR:level2", "i:VAR:level2"])
+; + ここから(ans:VAR:level2, i:VAR:level2)
+	mov	eax, [ebp-4]
+	push	eax
+	mov	eax, [ebp-8]
+	pop	ebx
+	add	eax, ebx
+; + ここまで(ans:VAR:level2, i:VAR:level2)
+	mov	[ebp-8], eax
+; = ここまで(ans:VAR:level2, ["+", "ans:VAR:level2", "i:VAR:level2"])
+; = ここから(i:VAR:level2, ["+", "i:VAR:level2", 1])
+; + ここから(i:VAR:level2, 1)
+	mov	eax, 1
+	push	eax
+	mov	eax, [ebp-4]
+	pop	ebx
+	add	eax, ebx
+; + ここまで(i:VAR:level2, 1)
+	mov	[ebp-4], eax
+; = ここまで(i:VAR:level2, ["+", "i:VAR:level2", 1])
+	jmp	sum_whilestart0
+sum_whileend0:
+; WHILEここまで
+	mov	eax, [ebp-8]
+	jmp	sum_ret
+; 関数sumの本体ここまで
+sum_ret	mov	esp, ebp
 	pop	ebp
 	ret

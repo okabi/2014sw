@@ -5,7 +5,10 @@ main(){
   for(i = 0; i < 20; i++){
     printf("fact(%d) => %d\n", i, fact(i));
   }
-  for(i = 0; i < 15; i++){
-    printf("bigger(%d) => %d\n", 10*i, bigger(10*i));
+  for(i = 0; i < 20; i++){
+    printf("fib(%d) => %d\n", i, fib(i));
+  }
+  for(i = 0; i < 20; i++){
+    printf("sum(%d) => %d\n", i, sum(i));
   }
 }

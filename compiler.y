@@ -182,7 +182,7 @@ rule
       | compound_statement
       | IF '(' expression ')' statement
         {
-	  result = [['IF'] + val[2] + [val[4]]]
+	  result = [['IF'] + val[2] + [val[4], []]]
         }       
       | IF '(' expression ')' statement ELSE statement
         {
@@ -545,6 +545,9 @@ $local_ifs = 0
 # 宣言されたWHILE文の数
 $local_whiles = 0
 
+# 宣言された論理演算数
+$local_logicals = 0
+
 # 関数culcNLocal用
 $n_local = 0
 
@@ -592,9 +595,110 @@ def generateAssemble(tree)
     end
   end
 
-
+  
   # 木を掘り進んで順番にコードを生成する
   def digTree(parent_node, child_node, lvl=-1)
+    # 比較演算ノードを渡して、比較演算を行うコードを出力する
+    def writeComp(base_node, lv)
+      def comp(node, lev)
+        # 先頭要素が比較演算子
+        if node[2].instance_of?(String) == true || node[2].instance_of?(Fixnum) == true
+          putsFile(nil, "mov", "eax", leafToCode(node[2]))          
+          putsFile(nil, "push", "eax")
+        else
+          digTree(node, node[2], lev + 1)
+          putsFile(nil, "push", "eax")
+        end
+        if node[1].instance_of?(String) == true || node[1].instance_of?(Fixnum) == true
+          putsFile(nil, "mov", "eax", leafToCode(node[1]))
+        else
+          digTree(node, node[1], lev + 1)
+        end
+        putsFile(nil, "pop", "ebx")        
+        putsFile(nil, "cmp", "eax", "ebx")                
+        case node[0]
+        when "=="
+          putsFile(nil, "sete", "al")                  
+        when "!="
+          putsFile(nil, "setne", "al")                  
+        when ">"
+          putsFile(nil, "setg", "al")                  
+        when "<"
+          putsFile(nil, "setl", "al")                  
+        when ">="
+          putsFile(nil, "setge", "al")                  
+        when "<="
+          putsFile(nil, "setle", "al")                  
+        end
+        putsFile(nil, "movzx", "eax", "al")
+        putsFile(nil, "cmp", "eax", 0)
+      end
+      
+      def logical(node, lv)
+        # 先頭要素が論理演算子
+        case node[0]
+        when "&&"
+          $file.puts("; && ここから(#{node[1]}, #{node[2]})")
+          putsFile(nil, "mov", "eax", "0")
+          putsFile(nil, "push", "eax")          
+          if node[1][0].instance_of?(String) == false || node[1][0] == "&&" || node[1][0] == "||"
+            logical(node[1], lv)
+          else
+            comp(node[1], lv)
+          end
+          putsFile(nil, "cmp", "eax", "0")          
+          putsFile(nil, "je", "#{$functions[$functions.length-1]}_logical#{$local_logicals}")
+          if node[1][0].instance_of?(String) == false || node[2][0] == "&&" || node[2][0] == "||"
+            logical(node[2], lv)
+          else
+            comp(node[2], lv)
+          end
+          putsFile(nil, "cmp", "eax", "0")          
+          putsFile(nil, "je", "#{$functions[$functions.length-1]}_logical#{$local_logicals}")
+          putsFile(nil, "pop", "eax")
+          putsFile(nil, "mov", "eax", "1")
+          putsFile(nil, "push", "eax")          
+          $file.puts("#{$functions[$functions.length-1]}_logical#{$local_logicals}:")
+          putsFile(nil, "pop", "eax")          
+          $local_logicals += 1        
+          putsFile(nil, "cmp", "eax", 0)
+          $file.puts("; && ここまで(#{node[1]}, #{node[2]})")        
+        when "||"
+          $file.puts("; || ここから(#{node[1]}, #{node[2]})")
+          putsFile(nil, "mov", "eax", "1")
+          putsFile(nil, "push", "eax")          
+          if node[1][0].instance_of?(String) == false || node[1][0] == "&&" || node[1][0] == "||"
+            logical(node[1], lv)
+          else
+            comp(node[1], lv)
+          end
+          putsFile(nil, "cmp", "eax", "0")          
+          putsFile(nil, "jne", "#{$functions[$functions.length-1]}_logical#{$local_logicals}")
+          if node[1][0].instance_of?(String) == false || node[2][0] == "&&" || node[2][0] == "||"
+            logical(node[2], lv)
+          else
+            comp(node[2], lv)
+          end
+          putsFile(nil, "cmp", "eax", "0")          
+          putsFile(nil, "jne", "#{$functions[$functions.length-1]}_logical#{$local_logicals}")
+          putsFile(nil, "pop", "eax")
+          putsFile(nil, "mov", "eax", "0")
+          putsFile(nil, "push", "eax")          
+          $file.puts("#{$functions[$functions.length-1]}_logical#{$local_logicals}:")
+          putsFile(nil, "pop", "eax")          
+          $local_logicals += 1        
+          putsFile(nil, "cmp", "eax", 0)
+          $file.puts("; || ここまで(#{node[1]}, #{node[2]})")        
+        end
+      end
+      
+      if base_node[0] == "&&" || base_node[0] == "||"
+        logical(base_node, lv)
+      else
+        comp(base_node, lv)
+      end
+    end
+
     # 現在見ているノード(配列)が最も深いノードか調べる
     leaf = true
     for n in child_node
@@ -658,6 +762,7 @@ def generateAssemble(tree)
             $local_vars.clear
             $local_ifs = 0
             $local_whiles = 0
+            $local_logicals = 0
           end
         else
           $local_vars["#{name}:#{type}:level#{level}"] = pos
@@ -665,50 +770,25 @@ def generateAssemble(tree)
         end
       when "WHILE"
         $file.puts("; WHILEここから")
-        $file.print("#{$functions[$functions.length-1]}_while#{$local_whiles}")
-        putsFile(nil, "mov", "eax", leafToCode(child_node[1][2]))                  
+        $file.puts("#{$functions[$functions.length-1]}_whilestart#{$local_whiles}:")
+        writeComp(child_node[1], lvl)
+        putsFile(nil, "je", "#{$functions[$functions.length-1]}_whileend#{$local_whiles}")
         for grandchild in child_node[2]
           digTree(child_node[2], grandchild, lvl + 1)
         end
-        if child_node[1][2].instance_of?(String) == true || child_node[1][2].instance_of?(Fixnum) == true
-          putsFile(nil, "mov", "eax", leafToCode(child_node[1][2]))          
-          putsFile(nil, "push", "eax")
-        else
-          digTree(child_node, child_node[1][2], lvl + 1)
-          putsFile(nil, "push", "eax")
-        end
-        if child_node[1][1].instance_of?(String) == true || child_node[1][1].instance_of?(Fixnum) == true
-          putsFile(nil, "mov", "eax", leafToCode(child_node[1][1]))
-        else
-          digTree(child_node, child_node[1][1], lvl + 1)
-        end
-        putsFile(nil, "pop", "ebx")        
-        putsFile(nil, "cmp", "eax", "ebx")                
-        case child_node[1][0]
-        when "=="
-          putsFile(nil, "sete", "al")                  
-        when "!="
-          putsFile(nil, "setne", "al")                  
-        when ">"
-          putsFile(nil, "setg", "al")                  
-        when "<"
-          putsFile(nil, "setl", "al")                  
-        when ">="
-          putsFile(nil, "setge", "al")                  
-        when "<="
-          putsFile(nil, "setle", "al")                  
-        end
-        putsFile(nil, "movzx", "eax", "al")
-
-        putsFile(nil, "cmp", "eax", 0)
-        putsFile(nil, "jne", "#{$functions[$functions.length-1]}_while#{$local_whiles}")
+        putsFile(nil, "jmp", "#{$functions[$functions.length-1]}_whilestart#{$local_whiles}")
+        $file.puts("#{$functions[$functions.length-1]}_whileend#{$local_whiles}:")
         $local_whiles += 1
         $file.puts("; WHILEここまで")
       when "IF"
         $file.puts("; IFここから")
+        writeComp(child_node[1], lvl)
+        putsFile(nil, "je", "#{$functions[$functions.length-1]}_if#{$local_ifs}")
         for grandchild in child_node[2]
           digTree(child_node[2], grandchild, lvl + 1)
         end
+        $file.puts("#{$functions[$functions.length-1]}_if#{$local_ifs}:")
+        $local_ifs += 1
         $file.puts("; この先else")
         for grandchild in child_node[3]
           digTree(child_node[3], grandchild, lvl + 1)

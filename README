@@ -6,10 +6,6 @@
     nasm -f elf test.asm
     gcc -m32 -lc -o program main.c test.asm
 
-* IFがまだ
-
-* 論理演算(&&, ||)がまだ
-
 
 
 

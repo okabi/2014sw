@@ -11,4 +11,7 @@ main(){
   for(i = 0; i < 20; i++){
     printf("sum(%d) => %d\n", i, sum(i));
   }
+  for(i = -10; i < 30; i++){
+    printf("compNum(%d) => %d\n", i, compNum(i));
+  }
 }

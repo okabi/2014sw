@@ -4,8 +4,7 @@ int fact(int n){
 }
 
 int fib(int n){
-    if(n == 0)	return 0;
-    else if(n == 1)    return 1;
+    if((n == 0) || (n == 1))	return n;
     else return fib(n - 1) + fib(n - 2);
 }
 
@@ -18,4 +17,14 @@ int sum(int n){
 	i = i + 1;
     }
     return ans;
+}
+
+int compNum(int n){
+    int ret;
+    ret = 1;
+    if(n < 0)	ret = ret * 2;
+    if(n <= 5 && n >= 0)  ret = ret * 3;
+    if(n <= 10 || n >= 5)  ret = ret * 5;
+    if((n == 10) || (n != 20 && n / 10 > 1))  ret = ret * 7;
+    return ret;
 }

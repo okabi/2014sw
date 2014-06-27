@@ -1,5 +1,8 @@
+	GLOBAL	z
+	COMMON	z 4
 	GLOBAL	fact
-fact	push	ebp
+fact:
+	push	ebp
 	mov	ebp, esp
 	sub	esp, 0
 ; 関数factの本体ここから
@@ -37,11 +40,13 @@ fact_if0:
 	jmp	fact_ret
 ; IFここまで
 ; 関数factの本体ここまで
-fact_ret	mov	esp, ebp
+fact_ret:
+	mov	esp, ebp
 	pop	ebp
 	ret
 	GLOBAL	fib
-fib	push	ebp
+fib:
+	push	ebp
 	mov	ebp, esp
 	sub	esp, 0
 ; 関数fibの本体ここから
@@ -110,26 +115,28 @@ fib_if0:
 	jmp	fib_ret
 ; IFここまで
 ; 関数fibの本体ここまで
-fib_ret	mov	esp, ebp
+fib_ret:
+	mov	esp, ebp
 	pop	ebp
 	ret
 	GLOBAL	sum
-sum	push	ebp
+sum:
+	push	ebp
 	mov	ebp, esp
 	sub	esp, 8
 ; 関数sumの本体ここから
 ; local_vars: n:VAR:level1 => 8
 ; local_vars: i:VAR:level2 => -4
 ; local_vars: ans:VAR:level2 => -8
-; = ここから(i:VAR:level2, 1)
-	mov	eax, 1
-	mov	[ebp-4], eax
-; = ここまで(i:VAR:level2, 1)
 ; = ここから(ans:VAR:level2, 0)
 	mov	eax, 0
 	mov	[ebp-8], eax
 ; = ここまで(ans:VAR:level2, 0)
-; WHILEここから
+; FORここから
+; = ここから(i:VAR:level2, 1)
+	mov	eax, 1
+	mov	[ebp-4], eax
+; = ここまで(i:VAR:level2, 1)
 sum_whilestart0:
 	mov	eax, [ebp+8]
 	push	eax
@@ -140,6 +147,22 @@ sum_whilestart0:
 	movzx	eax, al
 	cmp	eax, 0
 	je	sum_whileend0
+; IFここから
+	mov	eax, 5
+	push	eax
+	mov	eax, [ebp-4]
+	pop	ebx
+	cmp	eax, ebx
+	sete	al
+	movzx	eax, al
+	cmp	eax, 0
+	je	sum_if0
+; CONTINUEここから
+	jmp	sum_whilemid0
+; CONTINUEここまで
+sum_if0:
+; この先else
+; IFここまで
 ; = ここから(ans:VAR:level2, ["+", "ans:VAR:level2", "i:VAR:level2"])
 ; + ここから(ans:VAR:level2, i:VAR:level2)
 	mov	eax, [ebp-4]
@@ -150,6 +173,7 @@ sum_whilestart0:
 ; + ここまで(ans:VAR:level2, i:VAR:level2)
 	mov	[ebp-8], eax
 ; = ここまで(ans:VAR:level2, ["+", "ans:VAR:level2", "i:VAR:level2"])
+sum_whilemid0:
 ; = ここから(i:VAR:level2, ["+", "i:VAR:level2", 1])
 ; + ここから(i:VAR:level2, 1)
 	mov	eax, 1
@@ -162,15 +186,17 @@ sum_whilestart0:
 ; = ここまで(i:VAR:level2, ["+", "i:VAR:level2", 1])
 	jmp	sum_whilestart0
 sum_whileend0:
-; WHILEここまで
+; FORここまで
 	mov	eax, [ebp-8]
 	jmp	sum_ret
 ; 関数sumの本体ここまで
-sum_ret	mov	esp, ebp
+sum_ret:
+	mov	esp, ebp
 	pop	ebp
 	ret
 	GLOBAL	compNum
-compNum	push	ebp
+compNum:
+	push	ebp
 	mov	ebp, esp
 	sub	esp, 4
 ; 関数compNumの本体ここから
@@ -370,6 +396,32 @@ compNum_if3:
 	mov	eax, [ebp-4]
 	jmp	compNum_ret
 ; 関数compNumの本体ここまで
-compNum_ret	mov	esp, ebp
+compNum_ret:
+	mov	esp, ebp
+	pop	ebp
+	ret
+	GLOBAL	test
+test:
+	push	ebp
+	mov	ebp, esp
+	sub	esp, 0
+; 関数testの本体ここから
+; local_vars: x:VAR:level1 => 8
+; local_vars: y:VAR:level1 => 12
+; = ここから(z:VAR:level0, 10)
+	mov	eax, 10
+	mov	[z], eax
+; = ここまで(z:VAR:level0, 10)
+; - ここから(x:VAR:level1, z:VAR:level0)
+	mov	eax, [z]
+	push	eax
+	mov	eax, [ebp+8]
+	pop	ebx
+	sub	eax, ebx
+; - ここまで(x:VAR:level1, z:VAR:level0)
+	jmp	test_ret
+; 関数testの本体ここまで
+test_ret:
+	mov	esp, ebp
 	pop	ebp
 	ret

@@ -1,3 +1,5 @@
+int z;
+
 int fact(int n){
     if(n <= 1)	return 1;
     else return n * fact(n - 1);
@@ -10,12 +12,13 @@ int fib(int n){
 
 int sum(int n){
     int i,ans;
-    i = 1;
     ans = 0;
-    while(i <= n){
-        ans = ans + i;
-	i = i + 1;
+    for(i=1; i<=n; i=i+1){
+      if(i == 5)  continue;
+      ans = ans + i;
     }
+    
+    
     return ans;
 }
 
@@ -27,4 +30,9 @@ int compNum(int n){
     if(n <= 10 || n >= 5)  ret = ret * 5;
     if((n == 10) || (n != 20 && n / 10 > 1))  ret = ret * 7;
     return ret;
+}
+
+int test(int x, int y){
+    z = 10;
+    return x - z;
 }

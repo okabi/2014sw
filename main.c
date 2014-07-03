@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <math.h>
 main(){
   int i;
   int j;
@@ -15,9 +14,11 @@ main(){
   for(i = -10; i < 30; i++){
     printf("compNum(%d) => %d\n", i, compNum(i));
   }
-  printf("test(0,0) => %d\n", test(0,0));
-  printf("test(1,2) => %d\n", test(1,2));
-  printf("test(1,1) => %d\n", test(1,1));
-  printf("test(15,8) => %d\n", test(15,8));
+  printf("mod(0,0) => %d\n", mod(0,0));
+  printf("mod(1,2) => %d\n", mod(1,2));
+  printf("mod(1,1) => %d\n", mod(1,1));
+  printf("mod(15,8) => %d\n", mod(15,8));
+  printf("mod(-5,8) => %d\n", mod(-5,8));
+  printf("mod(-8,8) => %d\n", mod(-8,8));
 
 }

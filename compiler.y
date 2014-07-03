@@ -18,7 +18,14 @@ class Tinyc
     left NOTEQUAL
     left LOGICALAND
     left LOGICALOR
-    left '*' '/' '&' '|' '^'
+    left PP
+    left MM
+    right PLUSE
+    right MINUSE
+    right MULTE
+    right DIVE
+    right MODE
+    left '*' '/' '&' '|' '^' '%'
     left '+' '-'
     left '<' '>'
     right '='
@@ -282,6 +289,51 @@ rule
 	  val[0] += ":VAR:level#{check['level']}"
 	  result = ['=', val[0], val[2]]
         }       
+      | IDENTIFIER PLUSE assign_expr
+        {
+  	  check = findObject(val[0], 'VAR')
+	  if check['level'] < 0
+	    error(3, val[0], -1)
+	  end
+	  val[0] += ":VAR:level#{check['level']}"
+	  result = ['=', val[0], ["+", val[0], val[2]]]
+        }       
+      | IDENTIFIER MINUSE assign_expr
+        {
+  	  check = findObject(val[0], 'VAR')
+	  if check['level'] < 0
+	    error(3, val[0], -1)
+	  end
+	  val[0] += ":VAR:level#{check['level']}"
+	  result = ['=', val[0], ["-", val[0], val[2]]]
+        }       
+      | IDENTIFIER MULTE assign_expr
+        {
+  	  check = findObject(val[0], 'VAR')
+	  if check['level'] < 0
+	    error(3, val[0], -1)
+	  end
+	  val[0] += ":VAR:level#{check['level']}"
+	  result = ['=', val[0], ["*", val[0], val[2]]]
+        }       
+      | IDENTIFIER DIVE assign_expr
+        {
+  	  check = findObject(val[0], 'VAR')
+	  if check['level'] < 0
+	    error(3, val[0], -1)
+	  end
+	  val[0] += ":VAR:level#{check['level']}"
+	  result = ['=', val[0], ["/", val[0], val[2]]]
+        }       
+      | IDENTIFIER MODE assign_expr
+        {
+  	  check = findObject(val[0], 'VAR')
+	  if check['level'] < 0
+	    error(3, val[0], -1)
+	  end
+	  val[0] += ":VAR:level#{check['level']}"
+	  result = ['=', val[0], ["%", val[0], val[2]]]
+        }       
   logical_OR_expr
       : logical_AND_expr
       | logical_OR_expr LOGICALOR logical_AND_expr
@@ -360,14 +412,18 @@ rule
         {
 	  result = ['/', val[0], val[2]]
         }
+      | mult_expr '%' unary_expr
+        {
+	  result = ['%', val[0], val[2]]
+        }
   unary_expr
       : posifix_expr
       | '-' unary_expr
         {
-	  result = -(val[1].to_i).to_s
+	  result = -(val[1].to_i)
         }
   posifix_expr
-      : primary_expr
+      : subprimary_expr
       | IDENTIFIER '(' argument_expression_list_opt ')'
         {
   	  check = findObject(val[0], 'FUN')
@@ -385,6 +441,16 @@ rule
 	  else
 	    result = ['FCALL',val[0]] + [val[2]]
           end
+        }
+  subprimary_expr
+      : primary_expr
+      | primary_expr PP
+        {
+          result = ['=', val[0], ['+', val[0], 1]]
+        }
+      | primary_expr MM
+        {
+          result = ['=', val[0], ['-', val[0], 1]]
         }
   primary_expr
       : IDENTIFIER
@@ -534,44 +600,84 @@ end
   
   def parse(str)
     @q = []
+    ##########################
+    # 0 => コメントではない
+    # 1 => 行末までのコメント
+    # 2 => /* */形式のコメント
+    ##########################
+    comment = 0
     until str.empty?
-      case str
-      when /\A\s+/
-      when /\A\d+/
-        @q.push [:CONSTANT, $&.to_i]
-      when /\A(&&)/
-        @q.push [:LOGICALAND, $&]
-      when /\A(\|\|)/
-        @q.push [:LOGICALOR, $&]
-      when /\A(int)/
-        @q.push [:DATATYPE, $&]
-      when /\A(if)/
-        @q.push [:IF, $&]
-      when /\A(else)/
-        @q.push [:ELSE, $&]
-      when /\A(while)/
-        @q.push [:WHILE, $&]
-      when /\A(for)/
-        @q.push [:FOR, $&]
-      when /\A(continue)/
-        @q.push [:CONTINUE, $&]
-      when /\A(break)/
-        @q.push [:BREAK, $&]
-      when /\A(<=)/
-        @q.push [:LE, $&]
-      when /\A(>=)/
-        @q.push [:GE, $&]
-      when /\A(==)/
-        @q.push [:EQUAL, $&]
-      when /\A(!=)/
-        @q.push [:NOTEQUAL, $&]
-      when /\A(return)/
-        @q.push [:RETURN, $&]
-      when /\A[a-zA-Z]\w*/
-	@q.push [:IDENTIFIER, $&]
-      when /\A./o
-        s = $&
-        @q.push [s, s]
+      if comment == 0
+        case str
+        when /\A\s+/
+	when /\A\/\//
+          comment = 1
+	when /\A\/\*/
+          comment = 2
+        when /\A\d+/
+          @q.push [:CONSTANT, $&.to_i]
+        when /\A(&&)/
+          @q.push [:LOGICALAND, $&]
+        when /\A(\|\|)/
+          @q.push [:LOGICALOR, $&]
+        when /\A(int)/
+          @q.push [:DATATYPE, $&]
+        when /\A(if)/
+          @q.push [:IF, $&]
+        when /\A(else)/
+          @q.push [:ELSE, $&]
+        when /\A(while)/
+          @q.push [:WHILE, $&]
+        when /\A(for)/
+          @q.push [:FOR, $&]
+        when /\A(continue)/
+          @q.push [:CONTINUE, $&]
+        when /\A(break)/
+          @q.push [:BREAK, $&]
+        when /\A(<=)/
+          @q.push [:LE, $&]
+        when /\A(>=)/
+          @q.push [:GE, $&]
+        when /\A(==)/
+          @q.push [:EQUAL, $&]
+        when /\A(!=)/
+          @q.push [:NOTEQUAL, $&]
+	when /\A(\+\+)/
+          @q.push [:PP, $&]
+        when /\A(--)/
+          @q.push [:MM, $&]
+        when /\A(\+=)/
+          @q.push [:PLUSE, $&]
+        when /\A(\-=)/
+          @q.push [:MINUSE, $&]
+        when /\A(\*=)/
+          @q.push [:MULTE, $&]
+        when /\A(\/=)/
+          @q.push [:DIVE, $&]
+        when /\A(\%=)/
+          @q.push [:MODE, $&]
+        when /\A(return)/
+          @q.push [:RETURN, $&]
+        when /\A[a-zA-Z]\w*/
+          @q.push [:IDENTIFIER, $&]
+        when /\A./o
+          s = $&
+          @q.push [s, s]
+        end
+      elsif comment == 1
+        case str
+        when /\A.*\n/
+          comment = 0
+        when /\A\s+/
+	when /\A./o
+        end
+      else
+        case str
+        when /\A.*\*\//
+          comment = 0
+        when /\A\s+/
+	when /\A./o
+        end
       end
       str = $'
     end
@@ -676,22 +782,31 @@ def generateAssemble(tree)
   
   # 木を掘り進んで順番にコードを生成する
   def digTree(parent_node, child_node, lvl=-1, jmp_whiles=-1)
+    # 算術演算のアセンブリコード(前半共通部分)
+    def writeCompute(node, lev)
+      if node[2].instance_of?(String) == true
+        putsFile(nil, "mov", "eax", leafToCode(node[2]))          
+      elsif node[2].instance_of?(Fixnum) == true
+        putsFile(nil, "mov", "dword eax", leafToCode(node[2]))          
+      else
+        digTree(node, node[2], lev + 1)
+      end
+      putsFile(nil, "push", "eax")
+      if node[1].instance_of?(String) == true
+        putsFile(nil, "mov", "eax", leafToCode(node[1]))
+      elsif node[1].instance_of?(Fixnum) == true
+        putsFile(nil, "mov", "dword eax", leafToCode(node[1]))
+      else
+        digTree(node, node[1], lev + 1)
+      end      
+    end
+
+
     # 比較演算ノードを渡して、比較演算を行うコードを出力する
     def writeComp(base_node, lv)
       def comp(node, lev)
         # 先頭要素が比較演算子
-        if node[2].instance_of?(String) == true || node[2].instance_of?(Fixnum) == true
-          putsFile(nil, "mov", "eax", leafToCode(node[2]))          
-          putsFile(nil, "push", "eax")
-        else
-          digTree(node, node[2], lev + 1)
-          putsFile(nil, "push", "eax")
-        end
-        if node[1].instance_of?(String) == true || node[1].instance_of?(Fixnum) == true
-          putsFile(nil, "mov", "eax", leafToCode(node[1]))
-        else
-          digTree(node, node[1], lev + 1)
-        end
+        writeCompute(node, lev)
         putsFile(nil, "pop", "ebx")        
         putsFile(nil, "cmp", "eax", "ebx")                
         case node[0]
@@ -791,23 +906,6 @@ def generateAssemble(tree)
       end
       
       digLogical(base_node, lv)
-    end
-
-
-    # 算術演算のアセンブリコード(前半共通部分)
-    def writeCompute(node, lev)
-      if node[2].instance_of?(String) == true || node[2].instance_of?(Fixnum) == true
-        putsFile(nil, "mov", "eax", leafToCode(node[2]))          
-        putsFile(nil, "push", "eax")
-      else
-        digTree(node, node[2], lev + 1)
-        putsFile(nil, "push", "eax")
-      end
-      if node[1].instance_of?(String) == true || node[1].instance_of?(Fixnum) == true
-        putsFile(nil, "mov", "eax", leafToCode(node[1]))
-      else
-        digTree(node, node[1], lev + 1)
-      end      
     end
 
 
@@ -919,15 +1017,17 @@ def generateAssemble(tree)
         ifs = $local_ifs
         $local_ifs += 1
         writeComp(child_node[1], lvl)
-        putsFile(nil, "je", "#{$functions[$functions.length-1]}_if#{ifs}")
+        putsFile(nil, "je", "#{$functions[$functions.length-1]}_else#{ifs}")
         for grandchild in child_node[2]
           digTree(child_node[2], grandchild, lvl + 1, jmp_whiles)
         end
-        $file.puts("#{$functions[$functions.length-1]}_if#{ifs}:")
+        putsFile(nil, "jmp", "#{$functions[$functions.length-1]}_if#{ifs}")
+        $file.puts("#{$functions[$functions.length-1]}_else#{ifs}:")
         $file.puts("; この先else")
         for grandchild in child_node[3]
           digTree(child_node[3], grandchild, lvl + 1, jmp_whiles)
         end
+        $file.puts("#{$functions[$functions.length-1]}_if#{ifs}:")
         $file.puts("; IFここまで")
       when "CONTINUE"
         $file.puts("; CONTINUEここから")
@@ -963,7 +1063,8 @@ def generateAssemble(tree)
         # 代入命令
         $file.puts("; = ここから(#{child_node[1]}, #{child_node[2]})")
         if child_node[2].instance_of?(String) == true
-          putsFile(nil, "mov", leafToCode(child_node[1]), leafToCode(child_node[2]))
+          putsFile(nil, "mov", "eax", leafToCode(child_node[2]))
+          putsFile(nil, "mov", leafToCode(child_node[1]), "eax")
         elsif child_node[2].instance_of?(Fixnum) == true
           putsFile(nil, "mov", "eax", leafToCode(child_node[2]))
           putsFile(nil, "mov", leafToCode(child_node[1]), "eax")          
@@ -1001,6 +1102,15 @@ def generateAssemble(tree)
         putsFile(nil, "pop", "ebx")        
         putsFile(nil, "idiv", "dword ebx")
         $file.puts("; / ここまで(#{child_node[1]}, #{child_node[2]})")
+      when "%"
+        # 剰余命令
+        $file.puts("; % ここから(#{child_node[1]}, #{child_node[2]})")
+        writeCompute(child_node, lvl)
+        putsFile(nil, "cdq")
+        putsFile(nil, "pop", "ebx")        
+        putsFile(nil, "idiv", "dword ebx")
+        putsFile(nil, "mov", "eax", "edx")        
+        $file.puts("; % ここまで(#{child_node[1]}, #{child_node[2]})")
       when "|"
         # OR命令
         $file.puts("; | ここから(#{child_node[1]}, #{child_node[2]})")

@@ -90,22 +90,31 @@ def generateAssemble(tree)
   
   # 木を掘り進んで順番にコードを生成する
   def digTree(parent_node, child_node, lvl=-1, jmp_whiles=-1)
+    # 算術演算のアセンブリコード(前半共通部分)
+    def writeCompute(node, lev)
+      if node[2].instance_of?(String) == true
+        putsFile(nil, "mov", "eax", leafToCode(node[2]))          
+      elsif node[2].instance_of?(Fixnum) == true
+        putsFile(nil, "mov", "dword eax", leafToCode(node[2]))          
+      else
+        digTree(node, node[2], lev + 1)
+      end
+      putsFile(nil, "push", "eax")
+      if node[1].instance_of?(String) == true
+        putsFile(nil, "mov", "eax", leafToCode(node[1]))
+      elsif node[1].instance_of?(Fixnum) == true
+        putsFile(nil, "mov", "dword eax", leafToCode(node[1]))
+      else
+        digTree(node, node[1], lev + 1)
+      end      
+    end
+
+
     # 比較演算ノードを渡して、比較演算を行うコードを出力する
     def writeComp(base_node, lv)
       def comp(node, lev)
         # 先頭要素が比較演算子
-        if node[2].instance_of?(String) == true || node[2].instance_of?(Fixnum) == true
-          putsFile(nil, "mov", "eax", leafToCode(node[2]))          
-          putsFile(nil, "push", "eax")
-        else
-          digTree(node, node[2], lev + 1)
-          putsFile(nil, "push", "eax")
-        end
-        if node[1].instance_of?(String) == true || node[1].instance_of?(Fixnum) == true
-          putsFile(nil, "mov", "eax", leafToCode(node[1]))
-        else
-          digTree(node, node[1], lev + 1)
-        end
+        writeCompute(node, lev)
         putsFile(nil, "pop", "ebx")        
         putsFile(nil, "cmp", "eax", "ebx")                
         case node[0]
@@ -205,23 +214,6 @@ def generateAssemble(tree)
       end
       
       digLogical(base_node, lv)
-    end
-
-
-    # 算術演算のアセンブリコード(前半共通部分)
-    def writeCompute(node, lev)
-      if node[2].instance_of?(String) == true || node[2].instance_of?(Fixnum) == true
-        putsFile(nil, "mov", "eax", leafToCode(node[2]))          
-        putsFile(nil, "push", "eax")
-      else
-        digTree(node, node[2], lev + 1)
-        putsFile(nil, "push", "eax")
-      end
-      if node[1].instance_of?(String) == true || node[1].instance_of?(Fixnum) == true
-        putsFile(nil, "mov", "eax", leafToCode(node[1]))
-      else
-        digTree(node, node[1], lev + 1)
-      end      
     end
 
 
@@ -333,15 +325,17 @@ def generateAssemble(tree)
         ifs = $local_ifs
         $local_ifs += 1
         writeComp(child_node[1], lvl)
-        putsFile(nil, "je", "#{$functions[$functions.length-1]}_if#{ifs}")
+        putsFile(nil, "je", "#{$functions[$functions.length-1]}_else#{ifs}")
         for grandchild in child_node[2]
           digTree(child_node[2], grandchild, lvl + 1, jmp_whiles)
         end
-        $file.puts("#{$functions[$functions.length-1]}_if#{ifs}:")
+        putsFile(nil, "jmp", "#{$functions[$functions.length-1]}_if#{ifs}")
+        $file.puts("#{$functions[$functions.length-1]}_else#{ifs}:")
         $file.puts("; この先else")
         for grandchild in child_node[3]
           digTree(child_node[3], grandchild, lvl + 1, jmp_whiles)
         end
+        $file.puts("#{$functions[$functions.length-1]}_if#{ifs}:")
         $file.puts("; IFここまで")
       when "CONTINUE"
         $file.puts("; CONTINUEここから")
@@ -377,7 +371,8 @@ def generateAssemble(tree)
         # 代入命令
         $file.puts("; = ここから(#{child_node[1]}, #{child_node[2]})")
         if child_node[2].instance_of?(String) == true
-          putsFile(nil, "mov", leafToCode(child_node[1]), leafToCode(child_node[2]))
+          putsFile(nil, "mov", "eax", leafToCode(child_node[2]))
+          putsFile(nil, "mov", leafToCode(child_node[1]), "eax")
         elsif child_node[2].instance_of?(Fixnum) == true
           putsFile(nil, "mov", "eax", leafToCode(child_node[2]))
           putsFile(nil, "mov", leafToCode(child_node[1]), "eax")          
@@ -415,6 +410,15 @@ def generateAssemble(tree)
         putsFile(nil, "pop", "ebx")        
         putsFile(nil, "idiv", "dword ebx")
         $file.puts("; / ここまで(#{child_node[1]}, #{child_node[2]})")
+      when "%"
+        # 剰余命令
+        $file.puts("; % ここから(#{child_node[1]}, #{child_node[2]})")
+        writeCompute(child_node, lvl)
+        putsFile(nil, "cdq")
+        putsFile(nil, "pop", "ebx")        
+        putsFile(nil, "idiv", "dword ebx")
+        putsFile(nil, "mov", "eax", "edx")        
+        $file.puts("; % ここまで(#{child_node[1]}, #{child_node[2]})")
       when "|"
         # OR命令
         $file.puts("; | ここから(#{child_node[1]}, #{child_node[2]})")

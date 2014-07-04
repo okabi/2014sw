@@ -1,0 +1,252 @@
+\documentclass[titlepage, a4paper,12pt]{jarticle}
+\usepackage{listings}
+\lstset{
+  breaklines=true,
+}
+\usepackage{comment}
+\usepackage[dvipdfmx]{graphicx}
+\title{平成26年度 3回生前期学生実験SW \\ 中間レポート2}
+\author{松田貴大 \\ \small{学籍番号:1029-24-4015}}
+\date{提出日：\today 17:00 \\ 提出期限：平成26 年6 月27 日 16:00}
+%%
+\makeatletter
+\renewcommand{\thefigure}{\thesection.\arabic{figure}}
+\renewcommand{\thetable}{\thesection.\arabic{table}}
+\@addtoreset{figure}{section}
+\makeatother
+%%
+\begin{document}
+\maketitle
+\lstset{numbers=left,basicstyle=\small}
+\section{はじめに}
+使用言語はRuby(2.1.0p0)で、パーサの作成にはracc(1.4.11)\footnote{http://i.loveruby.net/ja/projects/racc/}を用いている。
+%%
+%%
+\section{課題6}
+\subsection{ソースコード}
+\label{sec:source}
+パスは、\~{}/2014sw/compiler/report2/compiler.yである。
+\lstinputlisting{compiler.y}
+%%
+\subsection{設計方針}
+\label{sec:arch}
+実験資料とは少し異なる仕様の構文木を生成する。たとえば、実験資料の例(課題7のもの)を見ると、以下のような構文木が生成されている\footnote{以下では、構文木をRuby形式の配列で記述する。}。
+\begin{verbatim}
+int x;
+int f(int x, int y)
+{
+  int x;
+  {
+    int x, y;
+    x+y;
+    {
+      int x, z;
+      x+y+z;
+    }
+  }
+  {
+    int w;
+    x+y+w;
+  }
+  x+y;
+}
+int g(int y)
+{
+  int z;
+  f(x, y);
+  g(z);
+}
+\end{verbatim}
+\begin{verbatim}
+[int x]
+[[int f] [[int x][int y]]
+[
+  [int x]
+  [
+    [int x y]
+    [+ x y]
+    [
+      [int x z]
+      [+ [+ x y] z]
+    ]
+  ]
+  [
+    [int w]
+    [+ [+ x y] w]
+  ]
+  [+ x y]
+]]
+[[int g] [[int y]]
+[
+  [int z]
+  [FCALL f x y]
+  [FCALL g z]
+]]
+\end{verbatim}
+今回採用した仕様では、同じTinyCプログラムは以下のような構文木を生み出す\footnote{実際には改行やインデントは行われない。}。
+\begin{verbatim}
+[
+  ["int" "x"]
+  [["int" "f"][["int" "x"] ["int" "y"]]
+  [
+    ["int" "x"]
+    ["int" "x"]
+    ["int" "y"]
+    ["+" "x" "y"]
+    ["int" "x"]
+    ["int" "z"]
+    ["+" ["+" "x" "y"] "z"]
+    ["int" "w"]
+    ["+" ["+" "x" "y"] "w"]
+    ["+" "x" "y"]
+  ]]
+  [["int" "g"] [["int" "y"]]
+  [
+    ["int" "z"]
+    ["FCALL" "f" ["x" "y"]]
+    ["FCALL" "g" ["z"]]
+  ]]
+]
+\end{verbatim}
+以下では、資料の仕様から変更した点について述べる。
+\paragraph{全体で1つの配列}
+大域で複数の変数や関数が宣言されている場合、全体を1つの配列にまとめるようにした。これは、後にこのプログラム全体を処理する際に、処理を楽にするためである。
+\paragraph{複数変数宣言}
+\begin{verbatim}
+int x, y;
+\end{verbatim}
+以上のように、データ型宣言の後に複数変数を宣言した場合、資料では以下のように構文木を生成している。
+\begin{verbatim}
+[int x y]
+\end{verbatim}
+この設計だと、変数宣言時に配列の長さが可変(2以上)になってしまい、処理がやや面倒になる。そのため、複数変数宣言されている場合、以下のように別々の配列を生成するようにした。
+\begin{verbatim}
+["int" "x"]
+["int" "y"]
+\end{verbatim}
+\paragraph{不必要な括弧}
+資料では、スコープを制限するための中括弧('\{'や'\}')によって、構文木に括弧が生成される。しかし、raccでは構文木の生成と同時にスコープの深さを調べることが出来る(すなわち、構文木生成と同時に意味解析が完全に可能である)ので、これらの括弧は不必要となる。よって、不必要な括弧は省略するようにした\footnote{もちろん、ifやwhileなどでは範囲を括弧で囲む。}。
+\paragraph{関数呼び出し時の引数}
+\begin{verbatim}
+f(x, y);
+\end{verbatim}
+以上のように、関数呼び出しの際に引数が複数ある場合、資料では以下のように構文木を生成している。
+\begin{verbatim}
+[FCALL f x y]
+\end{verbatim}
+この設計だと、関数呼び出し時に配列の長さが可変(2以上)になってしまい、処理がやや面倒になる。そのため、どのような場合でも引数全体を配列で包み、関数呼び出し部分の配列の長さは3になるようにした。
+\begin{verbatim}
+["FCALL" "f" ["x" "y"]]
+\end{verbatim}
+同様に、以下のようなコードは、以下のような構文木になる。
+\begin{verbatim}
+g(int x);
+h();
+\end{verbatim}
+\begin{verbatim}
+["FCALL" "g" ["x"]]
+["FCALL" "h" []]
+\end{verbatim}
+%%
+\subsection{文法規則のアクション部分について}
+アクション部分には、resultとvalという変数を使用することが出来る。
+\paragraph{result}
+resultは、パース時その部分に埋め込まれる結果を表す。処理順と関係なく対応する場所に埋め込まれるということである。これを利用して構文木を表す配列を生成する。
+\paragraph{val}
+valは配列で、アクションに対応する文法規則の(非)終端記号(ただし、アクション部分以前に書かれたもの)のそれぞれに現れるresultが格納される。ただし、1つの文法規則のパースがすべて終わらないと、valの中身はすべて空になる。すなわち、(非)終端記号と(非)終端記号の間にアクションを埋め込むことは可能だが、その時にvalには何も入っていないということである。
+%%
+\subsection{演算子の優先順位が正しく反映される理由}
+文法規則の以下の部分に注目する。
+\begin{verbatim}
+  relational_expr
+      : add_expr
+      | relational_expr '<' add_expr
+      | relational_expr '>' add_expr
+      | relational_expr LE add_expr
+      | relational_expr GE add_expr
+  add_expr
+      : mult_expr
+      | add_expr '+' mult_expr
+      | add_expr '-' mult_expr
+  mult_expr
+      : unary_expr
+      | mult_expr '*' unary_expr
+      | mult_expr '/' unary_expr
+  unary_expr
+      : posifix_expr
+      | '-' unary_expr
+  posifix_expr
+      : primary_expr
+      | IDENTIFIER '(' argument_expression_list_opt ')'
+  primary_expr
+      : IDENTIFIER
+      | CONSTANT
+      | '(' expression ')'
+  argument_expression_list
+      : assign_expr
+      | argument_expression_list ',' assign_expr
+  argument_expression_list_opt
+      : argument_expression_list
+      | /* none */
+\end{verbatim}
+以上のように、優先順位の高い演算ほど深い階層に記述されている。このために、演算子の優先順位が正しく反映される。
+
+たとえば、$1*2+(4-5)/8$という演算を、この文法規則でパースしてみる。ここで、$4-5$に対応する$expression$は$add\_expr$に辿り着くとする。
+\begin{eqnarray}
+  &    & 1*2+(4-5)/8 \nonumber \\
+  & \to & [add\_expr_{1*2} + mult\_expr_{(4-5)/8}] \nonumber \\
+  & \to & [mult\_expr_{1*2} + [mult\_expr_{(4-5)} / unary\_expr_{8}]] \nonumber \\
+  & \to & [[mult\_expr_{1} * mult\_expr_{2}] + [unary\_expr_{(4-5)} / posifix\_expr_{8}]] \nonumber \\
+  & \to & [[unary\_expr_{1} * unary\_expr_{2}] + [posifix\_expr_{(4-5)} / primary\_expr_{8}]] \nonumber \\
+  & \to & [[posifix\_expr_{1} * posifix\_expr_{2}] + [primary\_expr_{(4-5)} / CONSTANT_{8}]] \nonumber \\
+  & \to & [[primary\_expr_{1} * primary\_expr_{2}] + [[expression_{4-5}] / CONSTANT_{8}]] \nonumber \\
+  & \to & [[CONSTANT_{1} * CONSTANT_{2}] + [[add\_expr_{4-5}] / CONSTANT_{8}]] \nonumber \\
+  &     & \cdots \mbox{(同様にパースしていく)} \nonumber \\
+  & \to & [[CONSTANT_{1} * CONSTANT_{2}] + [[CONSTANT_{4} - CONSTANT_{5}] \nonumber \\
+  &     & / CONSTANT_{8}]] \nonumber
+\end{eqnarray}
+正しい優先順位で構文木が生成されていることが確認できる。
+%%
+\subsection{工夫点}
+節\ref{sec:arch}で述べたように、実験資料とは異なる構造の構文木を生成している。
+%%
+\subsection{実行例と結果}
+\ref{sec:source}節で述べたソースコードから生成されたパーサと構文木生成プログラムを使い、いくつかのTinyCプログラムの構文を解析した結果を示す。
+\subsubsection{例1}
+\lstinputlisting{test.tc}
+\paragraph{結果}
+\begin{verbatim}
+success!!! 
+ result => 
+[["int", "x"], [["int", "f"], [["int", "x"], ["int", "y"]], [["int", "x"],
+["int", "x"], ["int", "y"], ["+", "x", "y"], ["int", "x"], ["int", "z"], 
+["+", ["+", "x", "y"], "z"], ["int", "w"], ["+", ["+", "x", "y"], "w"], 
+["+", "x", "y"]]], [["int", "g"], [], [["int", "z"], 
+["FCALL", "f", ["x", "y"]], ["FCALL", "g", []]]]]
+\end{verbatim}
+\subsubsection{例2}
+\lstinputlisting{test2.tc}
+\paragraph{結果}
+\begin{verbatim}
+success!!! 
+ result => 
+[[["int", "gcd"], [["int", "a"], ["int", "b"]], [["IF", ["==", "a", "b"], 
+[["RETURN", "a"]], [["IF", [">", "a", "b"], [["RETURN", ["FCALL", "gcd", 
+[["-", "a", "b"], "b"]]]], [["RETURN", ["FCALL", "gcd", ["a", ["-", "b", 
+"a"]]]]]]]]]]]
+\end{verbatim}
+\subsubsection{例3}
+\lstinputlisting{test3.tc}
+\paragraph{結果}
+\begin{verbatim}
+success!!! 
+ result => 
+[[["int", "fact"], [["int", "x"]], [["int", "z"], ["=", "z", 1], ["WHILE",
+[">=", "x", 1], [["=", "z", ["*", "z", "x"]], ["=", "x", ["-", "x", 1]]]], 
+["RETURN", "z"]]]]
+\end{verbatim}
+%%
+%%
+\section{感想}
+構文木を生成することで、資料に書かれた文法規則は上手くできていることが分かった。配列の各部分の先頭要素がその配列の意味を表し、その後に引数(のようなもの)が続く構造が、Schemeを思い出した。
+\end{document}

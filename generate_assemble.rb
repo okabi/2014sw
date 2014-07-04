@@ -24,17 +24,26 @@ $local_logicals = 0
 # 関数culcNLocal用
 $n_local = 0
 
+# アセンブリコードを1行ごとに格納する配列
+$code = []
+
 
 
 # アセンブリコードを生成する
 def generateAssemble(tree)
   # アセンブリコードを1行書き出す
   def putsFile(a, b=nil, c=nil, d=nil)
-    $file.print("#{a}") if a != nil
-    $file.print("\t#{b}") if b != nil
-    $file.print("\t#{c}") if c != nil
-    $file.print(", #{d}") if d != nil
-    $file.puts("")
+    # $file.print("#{a}") if a != nil
+    # $file.print("\t#{b}") if b != nil
+    # $file.print("\t#{c}") if c != nil
+    # $file.print(", #{d}") if d != nil
+    # $file.puts("")
+    text = ""
+    text += "#{a}" if a != nil
+    text += "\t#{b}" if b != nil
+    text += "\t#{c}" if c != nil
+    text += ", #{d}" if d != nil
+    $code.push(text)
   end
 
 
@@ -139,7 +148,7 @@ def generateAssemble(tree)
         # 先頭要素が論理演算子
         case node[0]
         when "&&"
-          $file.puts("; && ここから(#{node[1]}, #{node[2]})")
+          putsFile("; && ここから(#{node[1]}, #{node[2]})")
           putsFile(nil, "mov", "eax", "0")
           putsFile(nil, "push", "eax")          
           if node[1][0].instance_of?(String) == false
@@ -165,12 +174,12 @@ def generateAssemble(tree)
           putsFile(nil, "pop", "eax")
           putsFile(nil, "mov", "eax", "1")
           putsFile(nil, "push", "eax")          
-          $file.puts("#{$functions[$functions.length-1]}_logical#{logicals}:")
+          putsFile("#{$functions[$functions.length-1]}_logical#{logicals}:")
           putsFile(nil, "pop", "eax")          
           putsFile(nil, "cmp", "eax", 0)
-          $file.puts("; && ここまで(#{node[1]}, #{node[2]})")        
+          putsFile("; && ここまで(#{node[1]}, #{node[2]})")        
         when "||"
-          $file.puts("; || ここから(#{node[1]}, #{node[2]})")
+          putsFile("; || ここから(#{node[1]}, #{node[2]})")
           putsFile(nil, "mov", "eax", "1")
           putsFile(nil, "push", "eax")          
           if node[1][0].instance_of?(String) == false
@@ -196,10 +205,10 @@ def generateAssemble(tree)
           putsFile(nil, "pop", "eax")
           putsFile(nil, "mov", "eax", "0")
           putsFile(nil, "push", "eax")          
-          $file.puts("#{$functions[$functions.length-1]}_logical#{logicals}:")
+          putsFile("#{$functions[$functions.length-1]}_logical#{logicals}:")
           putsFile(nil, "pop", "eax")          
           putsFile(nil, "cmp", "eax", 0)
-          $file.puts("; || ここまで(#{node[1]}, #{node[2]})")        
+          putsFile("; || ここまで(#{node[1]}, #{node[2]})")        
         end
       end
       def digLogical(node, lev)
@@ -268,14 +277,14 @@ def generateAssemble(tree)
             culcNLocal(parent_node[2])
             putsFile(nil, "sub", "esp", "#{$n_local}")
             
-            $file.puts("; 関数#{name}の本体ここから")
+            putsFile("; 関数#{name}の本体ここから")
             for grandchild in parent_node[1]
               digTree(child_node, grandchild, lvl + 1, jmp_whiles)
             end
             for grandchild in parent_node[2]
               digTree(child_node, grandchild, lvl + 1, jmp_whiles)
             end
-            $file.puts("; 関数#{name}の本体ここまで")
+            putsFile("; 関数#{name}の本体ここまで")
             
             putsFile("#{name}_ret:")
             putsFile(nil, "mov", "esp", "ebp")
@@ -288,40 +297,40 @@ def generateAssemble(tree)
           end
         else
           $local_vars["#{name}:#{type}:level#{level}"] = pos
-          $file.puts("; local_vars: #{name}:#{type}:level#{level} => #{pos}")
+          putsFile("; local_vars: #{name}:#{type}:level#{level} => #{pos}")
         end
       when "WHILE"
-        $file.puts("; WHILEここから")
+        putsFile("; WHILEここから")
         whiles = $local_whiles
         $local_whiles += 1
-        $file.puts("#{$functions[$functions.length-1]}_whilestart#{whiles}:")
+        putsFile("#{$functions[$functions.length-1]}_whilestart#{whiles}:")
         writeComp(child_node[1], lvl)
         putsFile(nil, "je", "#{$functions[$functions.length-1]}_whileend#{whiles}")
         for grandchild in child_node[2]
           digTree(child_node[2], grandchild, lvl + 1, whiles)
         end
         putsFile(nil, "jmp", "#{$functions[$functions.length-1]}_whilestart#{whiles}")
-        $file.puts("#{$functions[$functions.length-1]}_whilemid#{whiles}:")
-        $file.puts("#{$functions[$functions.length-1]}_whileend#{whiles}:")
-        $file.puts("; WHILEここまで")
+        putsFile("#{$functions[$functions.length-1]}_whilemid#{whiles}:")
+        putsFile("#{$functions[$functions.length-1]}_whileend#{whiles}:")
+        putsFile("; WHILEここまで")
       when "FOR"
-        $file.puts("; FORここから")
+        putsFile("; FORここから")
         digTree(child_node, child_node[2], lvl, jmp_whiles)
         whiles = $local_whiles
         $local_whiles += 1
-        $file.puts("#{$functions[$functions.length-1]}_whilestart#{whiles}:")
+        putsFile("#{$functions[$functions.length-1]}_whilestart#{whiles}:")
         writeComp(child_node[1], lvl)
         putsFile(nil, "je", "#{$functions[$functions.length-1]}_whileend#{whiles}")
         for grandchild in child_node[4]
           digTree(child_node[4], grandchild, lvl + 1, whiles)
         end
-        $file.puts("#{$functions[$functions.length-1]}_whilemid#{whiles}:")
+        putsFile("#{$functions[$functions.length-1]}_whilemid#{whiles}:")
         digTree(child_node, child_node[3], lvl, jmp_whiles)
         putsFile(nil, "jmp", "#{$functions[$functions.length-1]}_whilestart#{whiles}")
-        $file.puts("#{$functions[$functions.length-1]}_whileend#{whiles}:")
-        $file.puts("; FORここまで")
+        putsFile("#{$functions[$functions.length-1]}_whileend#{whiles}:")
+        putsFile("; FORここまで")
       when "IF"
-        $file.puts("; IFここから")
+        putsFile("; IFここから")
         ifs = $local_ifs
         $local_ifs += 1
         writeComp(child_node[1], lvl)
@@ -330,21 +339,21 @@ def generateAssemble(tree)
           digTree(child_node[2], grandchild, lvl + 1, jmp_whiles)
         end
         putsFile(nil, "jmp", "#{$functions[$functions.length-1]}_if#{ifs}")
-        $file.puts("#{$functions[$functions.length-1]}_else#{ifs}:")
-        $file.puts("; この先else")
+        putsFile("#{$functions[$functions.length-1]}_else#{ifs}:")
+        putsFile("; この先else")
         for grandchild in child_node[3]
           digTree(child_node[3], grandchild, lvl + 1, jmp_whiles)
         end
-        $file.puts("#{$functions[$functions.length-1]}_if#{ifs}:")
-        $file.puts("; IFここまで")
+        putsFile("#{$functions[$functions.length-1]}_if#{ifs}:")
+        putsFile("; IFここまで")
       when "CONTINUE"
-        $file.puts("; CONTINUEここから")
+        putsFile("; CONTINUEここから")
         putsFile(nil, "jmp", "#{$functions[$functions.length-1]}_whilemid#{jmp_whiles}")        
-        $file.puts("; CONTINUEここまで")
+        putsFile("; CONTINUEここまで")
       when "BREAK"
-        $file.puts("; BREAKここから")
+        putsFile("; BREAKここから")
         putsFile(nil, "jmp", "#{$functions[$functions.length-1]}_whileend#{jmp_whiles}")        
-        $file.puts("; BREAKここまで")
+        putsFile("; BREAKここまで")
       when "FCALL"
         child_node[2].length.times do |i|
           if child_node[2][child_node[2].length-1-i].instance_of?(String) == true || child_node[2][child_node[2].length-1-i].instance_of?(Fixnum) == true
@@ -369,77 +378,76 @@ def generateAssemble(tree)
 
       when "="
         # 代入命令
-        $file.puts("; = ここから(#{child_node[1]}, #{child_node[2]})")
+        putsFile("; = ここから(#{child_node[1]}, #{child_node[2]})")
         if child_node[2].instance_of?(String) == true
           putsFile(nil, "mov", "eax", leafToCode(child_node[2]))
           putsFile(nil, "mov", leafToCode(child_node[1]), "eax")
         elsif child_node[2].instance_of?(Fixnum) == true
-          putsFile(nil, "mov", "eax", leafToCode(child_node[2]))
-          putsFile(nil, "mov", leafToCode(child_node[1]), "eax")          
+          putsFile(nil, "mov", "dword #{leafToCode(child_node[1])}", leafToCode(child_node[2]))          
         else
           digTree(child_node, child_node[2], lvl + 1, jmp_whiles)
           putsFile(nil, "mov", leafToCode(child_node[1]), "eax")
         end
-        $file.puts("; = ここまで(#{child_node[1]}, #{child_node[2]})")
+        putsFile("; = ここまで(#{child_node[1]}, #{child_node[2]})")
       when "+"
         # 加算命令
-        $file.puts("; + ここから(#{child_node[1]}, #{child_node[2]})")
+        putsFile("; + ここから(#{child_node[1]}, #{child_node[2]})")
         writeCompute(child_node, lvl)
         putsFile(nil, "pop", "ebx")        
         putsFile(nil, "add", "eax", "ebx")
-        $file.puts("; + ここまで(#{child_node[1]}, #{child_node[2]})")
+        putsFile("; + ここまで(#{child_node[1]}, #{child_node[2]})")
       when "-"
         # 減算命令
-        $file.puts("; - ここから(#{child_node[1]}, #{child_node[2]})")
+        putsFile("; - ここから(#{child_node[1]}, #{child_node[2]})")
         writeCompute(child_node, lvl)
         putsFile(nil, "pop", "ebx")        
         putsFile(nil, "sub", "eax", "ebx")
-        $file.puts("; - ここまで(#{child_node[1]}, #{child_node[2]})")
+        putsFile("; - ここまで(#{child_node[1]}, #{child_node[2]})")
       when "*"
         # 乗算命令
-        $file.puts("; * ここから(#{child_node[1]}, #{child_node[2]})")
+        putsFile("; * ここから(#{child_node[1]}, #{child_node[2]})")
         writeCompute(child_node, lvl)
         putsFile(nil, "pop", "ebx")        
         putsFile(nil, "imul", "eax", "ebx")
-        $file.puts("; * ここまで(#{child_node[1]}, #{child_node[2]})")
+        putsFile("; * ここまで(#{child_node[1]}, #{child_node[2]})")
       when "/"
         # 除算命令
-        $file.puts("; / ここから(#{child_node[1]}, #{child_node[2]})")
+        putsFile("; / ここから(#{child_node[1]}, #{child_node[2]})")
         writeCompute(child_node, lvl)
         putsFile(nil, "cdq")
         putsFile(nil, "pop", "ebx")        
         putsFile(nil, "idiv", "dword ebx")
-        $file.puts("; / ここまで(#{child_node[1]}, #{child_node[2]})")
+        putsFile("; / ここまで(#{child_node[1]}, #{child_node[2]})")
       when "%"
         # 剰余命令
-        $file.puts("; % ここから(#{child_node[1]}, #{child_node[2]})")
+        putsFile("; % ここから(#{child_node[1]}, #{child_node[2]})")
         writeCompute(child_node, lvl)
         putsFile(nil, "cdq")
         putsFile(nil, "pop", "ebx")        
         putsFile(nil, "idiv", "dword ebx")
         putsFile(nil, "mov", "eax", "edx")        
-        $file.puts("; % ここまで(#{child_node[1]}, #{child_node[2]})")
+        putsFile("; % ここまで(#{child_node[1]}, #{child_node[2]})")
       when "|"
         # OR命令
-        $file.puts("; | ここから(#{child_node[1]}, #{child_node[2]})")
+        putsFile("; | ここから(#{child_node[1]}, #{child_node[2]})")
         writeCompute(child_node, lvl)
         putsFile(nil, "pop", "ebx")        
         putsFile(nil, "or", "eax", "ebx")
-        $file.puts("; | ここまで(#{child_node[1]}, #{child_node[2]})")
+        putsFile("; | ここまで(#{child_node[1]}, #{child_node[2]})")
       when "^"
         # XOR命令
-        $file.puts("; ^ ここから(#{child_node[1]}, #{child_node[2]})")
+        putsFile("; ^ ここから(#{child_node[1]}, #{child_node[2]})")
         writeCompute(child_node, lvl)
         putsFile(nil, "pop", "ebx")        
         putsFile(nil, "xor", "eax", "ebx")
-        $file.puts("; ^ ここまで(#{child_node[1]}, #{child_node[2]})")
+        putsFile("; ^ ここまで(#{child_node[1]}, #{child_node[2]})")
       when "&"
         # AND命令
-        $file.puts("; & ここから(#{child_node[1]}, #{child_node[2]})")
+        putsFile("; & ここから(#{child_node[1]}, #{child_node[2]})")
         writeCompute(child_node, lvl)
         putsFile(nil, "pop", "ebx")        
         putsFile(nil, "and", "eax", "ebx")
-        $file.puts("; & ここまで(#{child_node[1]}, #{child_node[2]})")
+        putsFile("; & ここまで(#{child_node[1]}, #{child_node[2]})")
       end    
 
     else
@@ -453,4 +461,64 @@ def generateAssemble(tree)
     end
   end
   digTree(nil, tree)
+end
+
+
+# 最適化
+def optimization(code)
+  finish = false
+  code.delete_if{|t| t =~ /\A;/}
+
+  while finish == false
+    finish = true
+    code.length.times do |i|
+      # jmp直後にjmp先ラベルが存在する場合
+      if code[i] =~ /\A\tjmp\t(.+)/
+        if i < code.length - 1
+          label = $1
+          code[i+1] =~ /\A(.+):/
+          # puts "#{label.inspect} と #{$1.inspect}"
+          if label == $1
+            code.slice!(i)
+            finish = false
+            break
+          end
+        end
+        # 無条件ジャンプとラベルにはさまれた命令の削除
+        j = 1
+        while i + j < code.length
+          if code[i+j] =~ /\A[^\t]+:/
+            break
+          else
+            code.slice!(i+j)
+            finish = false
+          end
+        end
+      # elseラベルの直後にif終了ラベルがある場合
+      elsif code[i] =~ /\A(.+)_else(.+):/
+        if i < code.length - 1
+          label_func = $1
+          label_num = $2
+          code[i+1] =~ /\A(.+)_if(.+):/
+          # puts "#{label_func}_else#{label_num} と #{$1}_if#{$2}"
+          if label_func == $1 && label_num == $2
+            code.slice!(i)
+            code.length.times do |j|
+              if code[j] =~ /\A\t(.+)\t(.+)/
+                if $2 == "#{label_func}_else#{label_num}"
+                  code[j] = "\t#{$1}\t#{label_func}_if#{label_num}"
+                end
+              end
+            end
+            finish = false
+          end
+        end       
+      end
+      if finish == false
+        break
+      end
+    end
+  end
+
+  return code
 end

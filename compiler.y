@@ -51,13 +51,13 @@ rule
         }  
   external_declaration
       : declaration
-      {
-	result = val[0]
-      }
+        {
+	  result = val[0]
+        }
       | function_definition
-      {
-	result = [val[0]]
-      }
+        {
+	  result = [val[0]]
+        }
   declaration
       : DATATYPE declarator_list ';'
         {

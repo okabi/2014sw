@@ -19,6 +19,6 @@ int f(int x, int y)
 int g()
 {
 	int z;
-	f(x, y);
+	f(x);
 	g();
 }

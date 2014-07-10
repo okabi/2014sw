@@ -51,13 +51,13 @@ rule
         }  
   external_declaration
       : declaration
-      {
-	result = val[0]
-      }
+        {
+	  result = val[0]
+        }
       | function_definition
-      {
-	result = [val[0]]
-      }
+        {
+	  result = [val[0]]
+        }
   declaration
       : DATATYPE declarator_list ';'
         {
@@ -1160,6 +1160,7 @@ end
 def optimization(code)
   finish = false
   code.delete_if{|t| t =~ /\A;/}
+  code.delete_if{|t| t =~ /\A\tsub\t(.+),\s0/}
 
   while finish == false
     finish = true

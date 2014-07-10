@@ -468,6 +468,7 @@ end
 def optimization(code)
   finish = false
   code.delete_if{|t| t =~ /\A;/}
+  code.delete_if{|t| t =~ /\A\tsub\t(.+),0/}
 
   while finish == false
     finish = true
@@ -514,6 +515,7 @@ def optimization(code)
           end
         end       
       end
+
       if finish == false
         break
       end

@@ -283,23 +283,23 @@ else            statement2
 
 コード生成については資料と同じだが、ラベル名は以下の規則で付ける。
 \begin{itemize}
-\item else対応部分 … {関数名}\_else{関数内でIF文が出現した回数}
-\item IF文終了対応部分 … {関数名}\_if{関数内でIF文が出現した回数}
+\item else対応部分 … \{関数名\}\_else\{関数内でIF文が出現した回数\}
+\item IF文終了対応部分 … \{関数名\}\_if\{関数内でIF文が出現した回数\}
 \end{itemize}
 %%
 \subsubsection{WHILE文}
 コード生成については資料と同じだが、ラベル名は以下の規則で付ける。
 \begin{itemize}
-\item WHILE文開始対応部分 … {関数名}\_whilestart{関数内でWHILE文・FOR文が出現した回数}
-\item WHILE文終了対応部分 … {関数名}\_whileend{関数内でWHILE文・FOR文が出現した回数}
+\item WHILE文開始対応部分 … \{関数名\}\_whilestart\{関数内でWHILE文・FOR文が出現した回数\}
+\item WHILE文終了対応部分 … \{関数名\}\_whileend\{関数内でWHILE文・FOR文が出現した回数\}
 \end{itemize}
 %%
 \subsubsection{FOR文}
 コード生成については資料と同じだが、ラベル名は以下の規則で付ける。
 \begin{itemize}
-\item FOR文開始対応部分 … {関数名}\_whilestart{関数内でWHILE文・FOR文が出現した回数}
-\item FOR文ループ毎処理対応部分\footnote{continue時に使用する。} … {関数名}\_whilemid{関数内でWHILE文・FOR文が出現した回数}
-\item FOR文終了対応部分 … {関数名}\_whileend{関数内でWHILE文・FOR文が出現した回数}
+\item FOR文開始対応部分 … \{関数名\}\_whilestart\{関数内でWHILE文・FOR文が出現した回数\}
+\item FOR文ループ毎処理対応部分\footnote{continue時に使用する。} … \{関数名\}\_whilemid\{関数内でWHILE文・FOR文が出現した回数\}
+\item FOR文終了対応部分 … \{関数名\}\_whileend\{関数内でWHILE文・FOR文が出現した回数\}
 \end{itemize}
 %%
 \subsubsection{continue、break}
@@ -333,6 +333,13 @@ f_if0:
 f_if0:
 \end{verbatim}
 このように、不必要なラベルを消去することが出来る。
+
+また、elseラベルを消去することで無意味な無条件ジャンプが生まれるので、さらに以下のように最適化できる。
+\begin{verbatim}
+    je f_if0
+;   ### 条件式が真 ###
+f_if0:
+\end{verbatim}
 %%
 \subsubsection{実行されない命令}
 無条件ジャンプからラベルまでの処理は、実行されることはない。
@@ -350,7 +357,11 @@ L:
 と書き換えられる。
 %%
 \subsubsection{関数定義時のesp操作}
-まだ作ってないよ。
+関数定義時、その関数でローカル変数が宣言されない場合、以下のようなコードが生成される。
+\begin{verbatim}
+    sub esp, 0
+\end{verbatim}
+これは無意味な演算であるので削減できる。
 %%
 \subsection{実行例と結果}
 \ref{sec:source}節で述べたソースコードから生成されたパーサと構文木生成プログラムを使い、いくつかのTinyCプログラムの構文を解析した後に意味解析を行い、最適化の後コード生成を行った結果を示す。
@@ -365,7 +376,6 @@ L:
 f:
 	push	ebp
 	mov	ebp, esp
-	sub	esp, 0
 	mov	dword eax, 0
 	push	eax
 	mov	eax, [ebp+8]

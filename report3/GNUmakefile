@@ -1,13 +1,12 @@
 exe = sample
-o = test.o
-c = main.c
+c = c_fun.c
 asm = test.asm
-tc = test.tc
+o = test.o
+tc =  test
 tinyc = tinyc.rb
-y = compiler.y
 
-$(exe): $(o) $(c) $(asm) $(tc) $(tinyc) $(y)
-	racc -o $(tinyc) $(y)
-	ruby $(tinyc) < $(tc)
+
+$(exe).out: $(tc).tc
+	ruby $(tinyc) < $(tc).tc 2> $(exe).err
 	nasm -f elf $(asm)
-	gcc -m32 -o $(exe) $(c) $(o)
+	gcc -m32 -o $(exe) $(o) $(c)

@@ -39,12 +39,14 @@ rule
         {
 	  if @error_num > 0
             result = ''
+	    exit(1)
           end
         } 
       | program external_declaration
         {
 	  if @error_num > 0
             result = ''
+	    exit(1)
           else
 	    result = val[0] + val[1] 
           end
@@ -433,7 +435,7 @@ rule
 	    else
 	      @error_stack.push(Object.new(val[0], 0, 'UNDEFFUN', 0))
             end
-	  elsif (val[2] == nil && check['size'] != 0) || val[2].length != check['size']
+	    elsif (val[2] == nil && check['size'] != 0) || (val[2] != nil && val[2].length != check['size'])
 	    error(2, val[0], check['size'])
 	  end
           if val[2] == nil
@@ -567,34 +569,34 @@ end
 
   def error(type, name, level)
     @error_num += 1
-    print "error: "
+    warn "error: "
     if type == 0
-      puts "Variable '#{name}' is already defined at same level(level#{level})."
+      warn "Variable '#{name}' is already defined at same level(level#{level}).\n"
     elsif type == 1
-      puts "Function '#{name}' is already defined at same level(level#{level})."
+      warn "Function '#{name}' is already defined at same level(level#{level}).\n"
     elsif type == 2
-      puts "Parameter-length of function '#{name}' is #{level}."
+      warn "Parameter-length of function '#{name}' is #{level}.\n"
     elsif type == 3
-      puts "Variable '#{name}' is NOT defined."
+      warn "Variable '#{name}' is NOT defined.\n"
     elsif type == 4
-      puts "continue is NOT available here."
+      warn "continue is NOT available here.\n"
     elsif type == 5
-      puts "break is NOT available here."
+      warn "break is NOT available here.\n"
     else
-      puts "Undefined type."
+      warn "Undefined type.\n"
     end
   end
 
   def warning(type, name, level)
-    print "warning: "
+    warn "warning: "
     if type == 0
-      puts "Variable '#{name}' is already defined at level #{level}."
+      warn "Variable '#{name}' is already defined at level #{level}.\n"
     elsif type == 1
-      puts "Function '#{name}' is already defined at level #{level}."
+      warn "Function '#{name}' is already defined at level #{level}.\n"
     elsif type == 2
-      puts "Function '#{name}' is NOT defined."
+      warn "Function '#{name}' is NOT defined.\n"
     else
-      puts "Undefined type."
+      warn "Undefined type.\n"
     end
   end
   
@@ -607,6 +609,7 @@ end
     ##########################
     comment = 0
     until str.empty?
+      # puts str.inspect
       if comment == 0
         case str
         when /\A\s+/
@@ -813,6 +816,21 @@ def generateAssemble(tree)
 
     # 比較演算ノードを渡して、比較演算を行うコードを出力する
     def writeComp(base_node, lv)
+      def var(node, lev)
+        # 変数や定数や式
+        if node.instance_of?(String) == true
+          putsFile(nil, "mov", "eax", leafToCode(node))
+        elsif node.instance_of?(Fixnum) == true
+          putsFile(nil, "mov", "dword eax", leafToCode(node))
+        else
+          digTree(nil, node, lev)
+        end      
+        putsFile(nil, "cmp", "eax", 0)
+        putsFile(nil, "setne", "al")                  
+        putsFile(nil, "movzx", "eax", "al")
+        putsFile(nil, "cmp", "eax", 0)        
+      end
+
       def comp(node, lev)
         # 先頭要素が比較演算子
         writeCompute(node, lev)
@@ -847,8 +865,10 @@ def generateAssemble(tree)
             digLogical(node[1], lv)
           elsif node[1][0] == "&&" || node[1][0] == "||"
             logical(node[1], lv)
-          else
+          elsif node[1][0] == "==" || node[1][0] == "!=" || node[1][0] == "<" || node[1][0] == ">" || node[1][0] == "<=" || node[1][0] == ">="
             comp(node[1], lv)
+          else
+            var(node[1], lv)
           end
           logicals = $local_logicals
           $local_logicals += 1        
@@ -858,8 +878,10 @@ def generateAssemble(tree)
             digLogical(node[2], lv)            
           elsif node[2][0] == "&&" || node[2][0] == "||"
             logical(node[2], lv)
-          else
+          elsif node[2][0] == "==" || node[2][0] == "!=" || node[2][0] == "<" || node[2][0] == ">" || node[2][0] == "<=" || node[2][0] == ">="
             comp(node[2], lv)
+          else
+            var(node[2], lv)
           end
           putsFile(nil, "cmp", "eax", "0")          
           putsFile(nil, "je", "#{$functions[$functions.length-1]}_logical#{logicals}")
@@ -878,8 +900,10 @@ def generateAssemble(tree)
             digLogical(node[1], lv)            
           elsif node[1][0] == "&&" || node[1][0] == "||"
             logical(node[1], lv)
-          else
+          elsif node[1][0] == "==" || node[1][0] == "!=" || node[1][0] == "<" || node[1][0] == ">" || node[1][0] == "<=" || node[1][0] == ">="
             comp(node[1], lv)
+          else
+            var(node[1], lv)
           end
           logicals = $local_logicals
           $local_logicals += 1        
@@ -889,8 +913,10 @@ def generateAssemble(tree)
             digLogical(node[2], lv)            
           elsif node[2][0] == "&&" || node[2][0] == "||"
             logical(node[2], lv)
-          else
+          elsif node[2][0] == "==" || node[2][0] == "!=" || node[2][0] == "<" || node[2][0] == ">" || node[2][0] == "<=" || node[2][0] == ">="
             comp(node[2], lv)
+          else
+            var(node[2], lv)
           end
           putsFile(nil, "cmp", "eax", "0")          
           putsFile(nil, "jne", "#{$functions[$functions.length-1]}_logical#{logicals}")
@@ -909,8 +935,10 @@ def generateAssemble(tree)
           digLogical(node[0], lev + 1)
         elsif node[0] == "&&" || node[0] == "||"
           logical(node, lev)
-        else
+        elsif node[0] == "==" || node[0] == "!=" || node[0] == "<" || node[0] == ">" || node[0] == "<=" || node[0] == ">="
           comp(node, lev)
+        else
+          var(node, lev)
         end
       end
       
@@ -1238,8 +1266,8 @@ end
 if str != nil
   begin
     tree = parser.parse(str)
-    puts "parse success!!!"
-    puts " result => \n#{tree}"
+    # puts "parse success!!!"
+    # puts " result => \n#{tree}"
     generateAssemble(tree)
     $code = optimization($code)
     for t in $code

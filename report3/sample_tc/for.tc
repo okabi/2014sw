@@ -1,0 +1,20 @@
+int fact(int n)
+{
+    int ans, i;
+    ans = 1;
+    for(i=n; i>=2; i--) {
+        ans *= i;
+    }
+    return ans;
+}
+
+int main()
+{
+    chk(fact(0), 1);
+    chk(fact(1), 1);
+    chk(fact(2), 2); 
+    chk(fact(3), 6);
+    chk(fact(4), 24);
+    chk(fact(5), 120);
+    chk(fact(6), 720);
+}

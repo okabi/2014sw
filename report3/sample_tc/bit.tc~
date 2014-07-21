@@ -1,0 +1,18 @@
+int bit_and(int x, int y) {
+    return x & y;
+}
+
+int bit_or(int x, int y) {
+    return x | y;
+}
+
+int bit_xor(int x, int y) {
+    return x ^ y;
+}
+
+int main()
+{
+    chk(bit_and(7, 10), 2);
+    chk(bit_or(7, 10), 15);
+    chk(bit_xor(7, 10), 13); 
+}

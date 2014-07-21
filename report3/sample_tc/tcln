@@ -1,0 +1,2 @@
+#!/bin/csh
+nasm -f elf $1.asm && gcc -o $1 $1.o c_fun.c

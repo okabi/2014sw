@@ -1,0 +1,16 @@
+#!/bin/csh
+foreach f (*.tc)
+	(../src/tcc < $f > $f:r.asm) >& $f:r.err
+	if (-z $f:r.asm) then
+		rm $f:r.asm
+	endif
+	if (-z $f:r.err) then
+		rm $f:r.err
+	endif
+	if (-e $f:r.asm) then
+		./tcln $f:r
+		if (-e $f:r) then
+			./$f:r > $f:r.out
+		endif
+	endif
+end
